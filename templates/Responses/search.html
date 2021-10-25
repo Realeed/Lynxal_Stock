@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lynxal Stock</title>
+        <link rel="stylesheet" href="../static/styles/main.css">
+    </head>
+    <body>
+        <p id="header">
+            <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
+        </p>
+        {% if stock == 'all' %}
+        <p class="headings" style="padding-top: 20px;">Response for searching <em style="font-style: italic;"> {{mpn}} </em> in All stocks </p>
+        {% elif stock == 'main' %}
+        <p class="headings" style="padding-top: 20px;">Response for searching <em style="font-style: italic;"> {{mpn}} </em> in the Main stock</p>
+        {% elif stock == 'production' %}
+        <p class="headings" style="padding-top: 20px;">Response for searching <em style="font-style: italic;"> {{mpn}} </em> in the Production stock</p>
+        {% elif stock == 'prototyping' %}
+        <p class="headings" style="padding-top: 20px;">Response for searching <em style="font-style: italic;"> {{mpn}} </em> in the Prototyping stock</p>
+        {% endif %}
+        {%  if not tables %}
+        <p class="headings" style="padding-top: 60px; font-size: 30px;">Nothing found, please check for typos and try again</p>
+        <p class="headings" style="font-size: 30px;">If it doesn't help, try searching it in other stocks</p>
+        <p class="headings" style="font-size: 28px;">
+            {% if stock == 'main' %}
+            <a href="{{url_for('underDev')}}">Search in the Production Stock</a>
+            <a href="{{url_for('underDev')}}" style="margin-left: 100px;">Search in the Prototyping Stock</a>
+            {% elif stock == 'production' %}
+            <a href="{{url_for('underDev')}}">Search in the Main Stock</a>
+            <a href="{{url_for('underDev')}}" style="margin-left: 100px;">Search in the Prototyping Stock</a>
+            {% elif stock == 'prototyping' %}
+            <a href="{{url_for('underDev')}}">Search in the Main Stock</a>
+            <a href="{{url_for('underDev')}}" style="margin-left: 100px;">Search in the Production Stock</a>
+            {% endif %}
+        </p>
+        <p class="headings" style="font-size: 30px;">If it doesn't help again, go order it, we don't have it</p>
+        <p style="text-align: center; margin-top: 80px;">
+            <a href="https://www.digikey.com/" style="text-decoration: none;" target="_blank"><img width="200px" src="../../static/data/digikey.png" alt="Digikey"></a>
+            <a href="https://eu.mouser.com/" style="text-decoration: none; margin-left: 50px;" target="_blank"><img width="200px" src="../../static/data/mouser.png" alt="Mouser"></a>
+            <a href="https://lcsc.com/" style="text-decoration: none; margin-left: 50px;" target="_blank"><img width="130px" src="../../static/data/lcsc.jpg" alt="LCSC"></a>
+            <a href="https://www.rocelec.com/" style="text-decoration: none; margin-left: 50px;" target="_blank"><img width="280px" src="../../static/data/RochesterElectronics.jpg" alt="LCSC"></a>
+        </p>
+        {% endif %}
+        <table id="responseTab">
+            <tr>
+                {% if tables %}
+                <td class="responsetd">Stock</td>
+                <td class="responsetd">Table</td>
+                {% endif %}
+                {% if columns %}
+                {% for column in columns %}
+                <td class="responsetd">{{column}}</td>
+                {% endfor %}
+                {% endif %}
+            </tr>
+            {% if tables %}
+            {% for table in tables %}
+            <tr>
+                <td class="responsetd">{{stocks[loop.index-1]}}</td>
+                <td class="responsetd">{{table}}</td>
+                {% for param in params %}
+                <td class="responsetd">{{param}}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </table>
+    </body>
+</html>

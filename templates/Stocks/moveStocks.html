@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lynxal Stock</title>
+        <link rel="stylesheet" href="../static/styles/main.css">
+    </head>
+    <body>
+        <p id="header" style="margin-top: 2%;">
+            <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
+        </p>
+        <p class="headings" style="font-style: italic;">Moving components to another stock</p>
+        <p class="headings">Choose the stocks you want to move</p>
+        <div id="selectdiv">
+            <form action="choose_stocks_to_move" method="POST">
+                <p class="moveFromToP">from</p>
+                <select name="action" class="select">
+                    <option class="options" value="selectAction" hidden>Select the Stock</option>
+                    <option class="options" value="main" >Main</option>
+                    <option class="options" value="production" >Production</option>
+                    <option class="options" value="prototyping" >Prototyping</option>
+                </select>
+                <p class="moveFromToP" style="margin-top: 50px;">to</p>
+                <select name="action" class="select" onchange="this.form.submit()">
+                    <option class="options" value="selectAction"  hidden>Select the Stock</option>
+                    <option class="options" value="main" >Main</option>
+                    <option class="options" value="production" >Production</option>
+                    <option class="options" value="prototyping" >Prototyping</option>
+                </select>
+            </form>
+
+        </div>
+    </body>
+</html>

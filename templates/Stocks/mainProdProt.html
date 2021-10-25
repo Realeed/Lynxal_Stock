@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lynxal Stock</title>
+        <link rel="stylesheet" href="../static/styles/main.css">
+    </head>
+    <body>
+        <p id="header">
+            <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
+        </p>
+        {% if request.args.get('action') == 'search' %}
+        <p class="headings" style="font-style: italic;">Searching in the stock</p>
+        <p class="headings">Choose the stock where you want to look for components</p>
+        {% elif request.args.get('action') == 'add' %}
+        <p class="headings" style="font-style: italic;">Adding to the stock</p>
+        <p class="headings">Choose the stock you want to add components/PCBs to</p>
+        {% elif request.args.get('action') == 'withdraw' %}
+        <p class="headings" style="font-style: italic;">Withdrawing from the stock</p>
+        <p class="headings">Choose the stock you want to withdraw from</p>
+        {% elif request.args.get('action') == 'inventorization' %}
+        <p class="headings" style="font-style: italic;">Inventorization of stock</p>
+        <p class="headings">Choose the stock you want to do inventorization of</p>
+        {% endif %}
+
+        <div id="selectdiv">
+            <form action="choose_stock" method="POST">
+                <select name="stock" class="select" onchange="this.form.submit()">
+                    <option class="options" value="selectStock"  hidden>Select the Stock</option>
+                    {% if request.args.get('action') == 'search' %}
+                    <option class="options" value="all" >All</option>
+                    {% endif %}
+                    <option class="options" value="main" >Main</option>
+                    {% if request.args.get('action') != 'add' %}
+                    <option class="options" value="production" >Production</option>
+                    {% endif %}
+                    <option class="options" value="prototyping" >Prototyping</option>
+                    {% if request.args.get('action') == 'add' %}
+                    <option class="options" value="readyForSale" >PCBs ready for sale</option>
+                    {% endif %}
+                </select>
+                <input type="hidden" name="action" value="{{request.args.get('action')}}">
+            </form>
+        </div>
+    </body>
+</html>
