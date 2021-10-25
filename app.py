@@ -205,14 +205,6 @@ def searchByMpn():
                             params.append(param)
 
         database.close()  
-        # use = 'USE main_stock'
-        # cursor.execute(use)
-        # # query = f'SELECT * FROM capacitors WHERE ManufacturerPartNumber = \'{mpn}\''
-        # showTable = 'SHOW TABLES'
-        # cursor.execute(showTable)
-        # tables = cursor.fetchall()        
-        # for table in tables:
-        #     print(table[0])
     except:
         return 'Couldn\'t connect to the db'
     for index, columnName in enumerate(columnNames):
