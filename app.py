@@ -22,7 +22,7 @@ def chooseAction():
         #     return redirect(url_for('chooseStocksToMove'))
         else:
             return redirect(url_for('underDev'))
-    return render_template('index.html')
+    return render_template('home.html')
 
 @app.route('/choose_stock', methods = ['POST', 'GET'])
 def chooseStock():
@@ -55,7 +55,7 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        database = mysql.connector.connect(host = 'localhost', user = 'root', password = 'Covid.73')
+        database = mysql.connector.connect(host = 'localhost', user = 'lynxal_team', password = 'lynxal2020')
         cursor = database.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
@@ -214,10 +214,7 @@ def searchByMpn():
         # for table in tables:
         #     print(table[0])
     except:
-        print('Couldn\'t connect to the database')
-    print(columnNames)
-    print(params)
-    print(tableNames)
+        return 'Couldn\'t connect to the db'
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if params[index - 1] % params[index] == 0:

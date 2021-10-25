@@ -8,17 +8,11 @@
         <p id="header">
             <a id="headerhref" style="pointer-events: none;" href="{{url_for('main')}}">Lynxal Stock</a>
         </p>
-        <p class="headings">Choose the action you want to take with the stock</p>
         <div id="selectdiv">
             <form action="choose_action" method="POST">
-                <select name="action" class="select" onchange="this.form.submit()">
-                    <option value="selectAction" class="options" hidden>Select the action</option>
-                    <option value="search" class="options">Search in stock</option>
-                    <option value="add" class="options">Add to stock</option>
-                    <option value="move" class="options">Move between stocks</option>
-                    <option value="withdraw" class="options">Withdraw from stock</option>
-                    <option value="inventorization" class="options">Inventorization of stock</option>
-                </select>
+                <input type="text" name="username" id="">
+                <input type="password" name="password" id="">
+                <input type="submit" name="" id="">
             </form>
         </div>
     </body>
