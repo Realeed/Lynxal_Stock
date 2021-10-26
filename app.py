@@ -1,6 +1,4 @@
-import re
-from flask import Flask, redirect, url_for, render_template, request, flash, send_file, g, session
-import flask
+from flask import Flask, redirect, url_for, render_template, request, g, session
 import mysql.connector
 
 app = Flask(__name__)
@@ -33,10 +31,17 @@ def signIn():
         password = request.form['password']
         for i in range(len(users)):
             if username == users[i].username and password == users[i].password:
+                session.permanent = True
                 session['user_id'] = users[i].id
                 return redirect(url_for('chooseAction'))
         return render_template('signin.html', failed = True)
     return render_template('signin.html')
+
+@app.route('/sign_out', methods = ['GET'])
+def signOut():
+    if session.get('user_id'): 
+        session.pop('user_id')
+    return redirect(url_for('signIn'))
 
 @app.route('/', methods = ['GET'])
 def main():
