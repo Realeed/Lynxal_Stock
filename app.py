@@ -254,7 +254,7 @@ def searchByMpn():
 
         database.close()  
     except:
-        return 'Couldn\'t connect to the db'
+        return 'Couldn\'t connect to the database'
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if params[index - 1] % params[index] == 0:
