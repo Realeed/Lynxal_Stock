@@ -1,17 +1,53 @@
-from itertools import accumulate
-from flask import Flask, redirect, url_for, render_template, request, flash, send_file
+import re
+from flask import Flask, redirect, url_for, render_template, request, flash, send_file, g, session
 import flask
 import mysql.connector
 
 app = Flask(__name__)
-app.secret_key = 'secret'
+app.secret_key = 'mybiggestsecret'
+
+class User:
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+    
+    def __repr__(self):
+        return f'User: {self.username}, Password: {self.password}'
+
+users = []
+users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
+
+@app.before_request
+def before_request():
+    g.user = None
+    if 'user_id' in session:
+        for i in range(len(users)):
+            if users[i].id == session.get('user_id'):
+                g.user = users[i]
+
+@app.route('/sign_in', methods = ['POST', 'GET'])
+def signIn():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        for i in range(len(users)):
+            if username == users[i].username and password == users[i].password:
+                session['user_id'] = users[i].id
+                return redirect(url_for('chooseAction'))
+        return render_template('signin.html', failed = True)
+    return render_template('signin.html')
 
 @app.route('/', methods = ['GET'])
 def main():
+    if not g.user:
+        return redirect(url_for('signIn'))
     return redirect(url_for('chooseAction'))
 
 @app.route('/choose_action', methods = ['POST', 'GET'])
 def chooseAction():
+    if not g.user:
+        return redirect(url_for('signIn'))
     if request.method == 'POST':
         action = request.form['action']
         # if action == 'search' or action == 'inventorization' or action == 'add' or action == 'withdraw':  
@@ -26,13 +62,16 @@ def chooseAction():
 
 @app.route('/choose_stock', methods = ['POST', 'GET'])
 def chooseStock():
+    if not g.user:
+        return redirect(url_for('signIn'))
     if request.method == 'POST':
         stock = request.form['stock']
         if stock == 'all':
             return redirect(url_for('underDev'))
         if stock == 'all' or stock == 'main' or stock == 'production' or stock == 'prototyping':
             return redirect(url_for('getInfo', action = request.form['action'], stock = stock))
-    return render_template('Stocks/mainProdProt.html')
+    if request.args['action']:
+        return render_template('Stocks/mainProdProt.html')
 
 @app.route('/oops_bug', methods = ['GET'])
 def underDev():
@@ -40,12 +79,16 @@ def underDev():
 
 @app.route('/choose_stocks_to_move', methods = ['POST', 'GET'])
 def chooseStocksToMove():
+    if not g.user:
+        return redirect(url_for('signIn'))
     if request.method == 'POST':
         print('')
     return render_template('Stocks/moveStocks.html')
 
 @app.route('/info_query', methods = ['GET'])
 def getInfo():
+    if not g.user:
+        return redirect(url_for('signIn'))
     action = request.args.get('action')
     if action == 'search':
         return render_template('Queries/search.html')
@@ -55,7 +98,7 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        database = mysql.connector.connect(host = 'localhost', user = 'lynxal_team', password = 'lynxal2020')
+        database = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
         cursor = database.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
