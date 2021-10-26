@@ -103,7 +103,7 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        database = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
+        database = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = g.user.username, password = g.user.password)
         cursor = database.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
