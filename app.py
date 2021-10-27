@@ -103,7 +103,8 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
+        #cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
+        cnx = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
         cursor = cnx.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
@@ -272,4 +273,5 @@ def searchByFile():
     return redirect(url_for('underDev'))
 
 if __name__  == "__main__":
-    app.run(host='0.0.0.0', port=80)
+    #app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80, debug=True)

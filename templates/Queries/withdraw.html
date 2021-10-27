@@ -14,7 +14,7 @@
                 <p class="infoMethodsP" style="margin-top: 50px;">Type in the Manufacturer Part Number and the Amount to withdraw</p>
                 <input type="text" name="mpn" id="mpnInp" style="margin-top: 20px; width: 430px;" placeholder="Manufacturer Part Number" required autofocus>
                 <input type="number" name="partQuantity" id="partQuantityInp" placeholder="Quantity" min="1" required>
-                <input type="submit" name="withdrawSubmit" id="submit" value="Withdraw">
+                <input type="submit" name="withdrawSubmit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Withdraw">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
         </div>
