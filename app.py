@@ -103,8 +103,8 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        database = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
-        cursor = database.cursor()
+        cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
+        cursor = cnx.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
         stockNames = []
@@ -251,8 +251,8 @@ def searchByMpn():
                             params.append('')
                         else:
                             params.append(param)
-
-        database.close()  
+        cursor.close()
+        cnx.close()  
     except:
         return 'Couldn\'t connect to the database'
     for index, columnName in enumerate(columnNames):
