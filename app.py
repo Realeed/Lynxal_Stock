@@ -291,11 +291,13 @@ def withdraw_from_stock():
         getTables = 'SHOW TABLES'
         cursor.execute(getTables)
         tables = cursor.fetchall()
+        found = False
         for table in tables:
             findmpn = f'SELECT * FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
             cursor.execute(findmpn)
             components = cursor.fetchall()
             if components:
+                found = True
                 getId = f'SELECT ID FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
                 cursor.execute(getId)
                 Ids = cursor.fetchall()
@@ -310,13 +312,14 @@ def withdraw_from_stock():
                     cnx.commit()
                     cursor.close()
                     cnx.close()
-                    break
+                    return 'Successfully updated!'
                 else:
                     return 'Not enough to withdraw!'
+        if not found:
+            return 'Couldn\'t find the component in the selected stock'
     except:
         return 'Couldn\'t connect to the database!'
     
-    return 'Successfully updated!'
         
 
 if __name__  == "__main__":
