@@ -310,9 +310,15 @@ def withdraw_from_stock():
                     update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {quantity}) WHERE ID = {Id}'
                     cursor.execute(update)
                     cnx.commit()
+                    cursor.execute(getQuantity)
+                    newStockQuantities = cursor.fetchall()
+                    newStockQuantity = newStockQuantities[0][0]
                     cursor.close()
                     cnx.close()
-                    return 'Successfully updated!'
+                    if newStockQuantity == stockQuantity - quantity: 
+                        return 'Successfully updated!'
+                    else:
+                        return 'Something went wrong while updating the database'
                 else:
                     return 'Not enough to withdraw!'
         if not found:
