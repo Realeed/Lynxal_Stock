@@ -272,6 +272,52 @@ def searchByValues():
 def searchByFile():
     return redirect(url_for('underDev'))
 
+@app.route('/withdraw_from_stock', methods = ['POST'])
+def withdraw_from_stock():
+    try:
+        cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
+        #cnx = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
+        cursor = cnx.cursor()
+        stock = request.form['stock']
+        mpn = request.form['mpn']
+        quantity = int(request.form['quantity'])
+        if stock == 'main':
+            use = 'USE main_stock'
+        elif stock == 'production':
+            use = 'USE production_stock'
+        elif stock == 'prototyping':
+            use = 'USE prototyping_stock'
+        cursor.execute(use)
+        getTables = 'SHOW TABLES'
+        cursor.execute(getTables)
+        tables = cursor.fetchall()
+        for table in tables:
+            findmpn = f'SELECT * FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
+            cursor.execute(findmpn)
+            components = cursor.fetchall()
+            if components:
+                getId = f'SELECT ID FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
+                cursor.execute(getId)
+                Ids = cursor.fetchall()
+                Id = Ids[0][0]
+                getQuantity = f'SELECT Quantity FROM {table[0]} where ID = {Id}'
+                cursor.execute(getQuantity)
+                stockQuantities = cursor.fetchall()
+                stockQuantity = stockQuantities[0][0]
+                if stockQuantity >= quantity:
+                    update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {quantity}) WHERE ID = {Id}'
+                    cursor.execute(update)
+                    cnx.commit()
+                    cursor.close()
+                    cnx.close()
+                    break
+                else:
+                    return 'Not enough to withdraw!'
+    except:
+        return 'Couldn\'t connect to the database!'
+    
+    return 'Successfully updated!'
+        
+
 if __name__  == "__main__":
-    app.run(host='0.0.0.0', port=80)
-    #app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
