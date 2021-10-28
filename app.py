@@ -262,7 +262,7 @@ def searchByMpn():
                 params[index] = params[index - 1] // params[index]
             else:
                 params[index] = round(params[index - 1] / params[index], 2)
-    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, params = params)
+    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, params = params, paramsLen = len(params))
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():

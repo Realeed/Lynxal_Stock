@@ -40,23 +40,24 @@
             <a href="https://www.rocelec.com/" style="text-decoration: none; margin-left: 50px;" target="_blank"><img width="280px" src="../../static/data/RochesterElectronics.jpg" alt="LCSC"></a>
         </p>
         {% endif %}
+        {% if tables %}
+        {% for table in tables %}
         <table id="responseTab">
             <tr>
-                {% if tables %}
-                <td class="responsetd">Stock</td>
-                <td class="responsetd">Table</td>
-                {% endif %}
+                <td colspan="{{paramsLen+1}}" class="responsetdheader">{{table}}</td>
+            </tr>
+            <tr>
+                <td class="responsetdheadings">Stock</td>
                 {% if columns %}
                 {% for column in columns %}
-                <td class="responsetd">{{column}}</td>
+                <td class="responsetdheadings">{{column}}</td>
                 {% endfor %}
                 {% endif %}
             </tr>
-            {% if tables %}
-            {% for table in tables %}
+            {% if stocks %}
+            {% for stock in stocks %}
             <tr>
-                <td class="responsetd">{{stocks[loop.index-1]}}</td>
-                <td class="responsetd">{{table}}</td>
+                <td class="responsetd">{{stock}}</td>
                 {% for param in params %}
                 <td class="responsetd">{{param}}</td>
                 {% endfor %}
@@ -64,5 +65,7 @@
             {% endfor %}
             {% endif %}
         </table>
+        {% endfor %}
+        {% endif %}
     </body>
 </html>
