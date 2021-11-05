@@ -258,14 +258,14 @@ def searchByMpn():
         return 'Couldn\'t connect to the database'
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
-            if not (params[index - 1] == 'None' or params[index] == 'None'):
+            if not (params[index - 1] == '' or params[index] == ''):
                 if params[index - 1] % params[index] == 0:
                     params[index] = params[index - 1] // params[index]
                 else:
                     params[index] = round(params[index - 1] / params[index], 2)
             else:
                 params[index] = 'Not available'
-        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, params = params, paramsLen = len(params))
+    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, params = params, paramsLen = len(params))
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():
