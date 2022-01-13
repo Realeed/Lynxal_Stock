@@ -14,7 +14,7 @@ class User:
         return f'User: {self.username}, Password: {self.password}'
 
 users = []
-users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
+users.append(User(id=1, username='lynxal_tea', password='lynxal2020'))
 
 @app.before_request
 def before_request():
