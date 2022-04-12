@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, render_template, request, g, session
-import mysql.connector
+import pyodbc
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -103,9 +103,9 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
-        #cnx = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
-        cursor = cnx.cursor()
+        # make db connection
+        connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')
+        cursor = connection.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
         stockNames = []
@@ -253,7 +253,7 @@ def searchByMpn():
                         else:
                             params.append(param)
         cursor.close()
-        cnx.close()  
+        connection.close()  
     except:
         return "Couldn't connect to the database"
     for index, columnName in enumerate(columnNames):
@@ -278,9 +278,9 @@ def searchByFile():
 @app.route('/withdraw_from_stock', methods = ['POST'])
 def withdraw_from_stock():
     try:
-        cnx = mysql.connector.connect(host = 'lynxal-stock-db.mysql.database.azure.com', user = f'{g.user.username}@lynxal-stock-db', password = g.user.password)
-        #cnx = mysql.connector.connect(host = 'localhost', user = g.user.username, password = g.user.password)
-        cursor = cnx.cursor()
+        # make db connection
+        connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')
+        cursor = connection.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
         quantity = int(request.form['quantity'])
@@ -296,28 +296,28 @@ def withdraw_from_stock():
         tables = cursor.fetchall()
         found = False
         for table in tables:
-            findmpn = f'SELECT * FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
+            findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
             cursor.execute(findmpn)
             components = cursor.fetchall()
             if components:
                 found = True
-                getId = f'SELECT ID FROM {table[0]} where ManufacturerPartNumber = \'{mpn}\''
+                getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
                 cursor.execute(getId)
                 Ids = cursor.fetchall()
                 Id = Ids[0][0]
-                getQuantity = f'SELECT Quantity FROM {table[0]} where ID = {Id}'
+                getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
                 cursor.execute(getQuantity)
                 stockQuantities = cursor.fetchall()
                 stockQuantity = stockQuantities[0][0]
                 if stockQuantity >= quantity:
                     update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {quantity}) WHERE ID = {Id}'
                     cursor.execute(update)
-                    cnx.commit()
+                    cursor.commit()
                     cursor.execute(getQuantity)
                     newStockQuantities = cursor.fetchall()
                     newStockQuantity = newStockQuantities[0][0]
                     cursor.close()
-                    cnx.close()
+                    connection.close()
                     if newStockQuantity == stockQuantity - quantity: 
                         return 'Successfully updated!'
                     else:
