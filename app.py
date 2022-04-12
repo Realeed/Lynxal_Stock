@@ -255,7 +255,7 @@ def searchByMpn():
         cursor.close()
         cnx.close()  
     except:
-        return 'Couldn\'t connect to the database'
+        return "Couldn't connect to the database"
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if not (params[index - 1] == '' or params[index] == ''):
@@ -325,9 +325,9 @@ def withdraw_from_stock():
                 else:
                     return 'Not enough to withdraw!'
         if not found:
-            return 'Couldn\'t find the component in the selected stock'
+            return "Couldn't find the component in the selected stock"
     except:
-        return 'Couldn\'t connect to the database!'
+        return "Couldn't connect to the database!"
     
         
 
