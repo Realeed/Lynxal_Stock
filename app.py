@@ -103,9 +103,6 @@ def getInfo():
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
     try:
-        # make db connection
-        connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')
-        cursor = connection.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
         stockNames = []
@@ -218,17 +215,19 @@ def searchByMpn():
                                 else:
                                     params.append(param)
         else:
+            # make db connection
+
             if stock == 'main':
-                use = 'USE main_stock'
+                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                 stockNames.append('Main')
             elif stock == 'production':
-                use = 'USE production_stock'
+                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
                 stockNames.append('Prodiction')
             elif stock == 'prototyping':
-                use = 'USE prototyping_stock'
+                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                 stockNames.append('Prototyping')
-            cursor.execute(use)
-            getTables = 'SHOW TABLES'
+            cursor = connection.cursor()
+            getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
             cursor.execute(getTables)
             tables = cursor.fetchall()
             for table in tables:
@@ -239,8 +238,9 @@ def searchByMpn():
                     appendTables(table[0])
                 for component in components:
                     print(component)
-                    getColumnNames = f'SHOW COLUMNS FROM {table[0]}'
+                    getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
                     cursor.execute(getColumnNames)
+                    print("test")
                     colNames = cursor.fetchall()
                     for colName in colNames:
                         print(colName[0])
