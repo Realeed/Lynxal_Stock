@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'stockretreival'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_54BAC22985914D92BB1BAF16A7240291 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AD3D0AB015834D6A9044E780CF8FA208 }}
