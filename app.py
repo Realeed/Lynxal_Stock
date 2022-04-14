@@ -222,7 +222,7 @@ def searchByMpn():
                 database = 'main_stock'
                 username = 'hakob'
                 password = '{SomeGoodPassword007}'   
-                driver= '{ODBC Driver 13 for SQL Server}'
+                driver= '{ODBC Driver 17 for SQL Server}'
 
                 with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as connection:
                     #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
