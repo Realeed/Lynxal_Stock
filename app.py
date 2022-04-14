@@ -16,6 +16,14 @@ class User:
 users = []
 users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
 
+# DB connection params
+
+server = 'stockretrievaldb.database.windows.net'
+database = 'main_stock'
+username = 'hakob'
+password = '{SomeGoodPassword007}'   
+driver= '{ODBC Driver 17 for SQL Server}'
+
 @app.before_request
 def before_request():
     g.user = None
@@ -218,12 +226,6 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                server = 'stockretrievaldb.database.windows.net'
-                database = 'main_stock'
-                username = 'hakob'
-                password = '{SomeGoodPassword007}'   
-                driver= '{ODBC Driver 17 for SQL Server}'
-
                 with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as connection:
                     #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                     stockNames.append('Main')
