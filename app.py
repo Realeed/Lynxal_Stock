@@ -1,5 +1,3 @@
-from logging import exception
-from msilib.schema import Error
 from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 
