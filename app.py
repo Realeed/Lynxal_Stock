@@ -218,7 +218,7 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                connection = pyodbc.connect('DRIVER={ODBC Drver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                 stockNames.append('Main')
             # elif stock == 'production':
             #     connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
@@ -256,7 +256,7 @@ def searchByMpn():
         # connection.close()  
     except Exception as e:
         print(e)
-        return pyodbc.drivers()
+        return str(pyodbc.drivers())
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if not (params[index - 1] == '' or params[index] == ''):
