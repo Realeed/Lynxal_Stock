@@ -263,7 +263,7 @@ def searchByMpn():
         # connection.close()  
     except Exception as e:
         print(e)
-        return "Couldn't connect to the db"
+        return str(e)
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if not (params[index - 1] == '' or params[index] == ''):
