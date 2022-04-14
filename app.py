@@ -218,8 +218,15 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                connection = pyodbc.connect('DRIVER={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
-                stockNames.append('Main')
+                server = 'stockretrievaldb.database.windows.net'
+                database = 'main_stock'
+                username = 'hakob'
+                password = '{SomeGoodPassword007}'   
+                driver= '{ODBC Driver 17 for SQL Server}'
+
+                with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as connection:
+                    #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                    stockNames.append('Main')
             # elif stock == 'production':
             #     connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
             #     stockNames.append('Prodiction')
@@ -256,7 +263,7 @@ def searchByMpn():
         # connection.close()  
     except Exception as e:
         print(e)
-        return "hi" + str(pyodbc.drivers())
+        return "Couldn't connect to the db"
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
             if not (params[index - 1] == '' or params[index] == ''):
