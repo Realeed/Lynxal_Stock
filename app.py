@@ -24,6 +24,8 @@ username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
 
+connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+
 @app.before_request
 def before_request():
     g.user = None
@@ -226,7 +228,7 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as connection:
+                with pyodbc.connect(connString) as connection:
                     #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                     stockNames.append('Main')
             # elif stock == 'production':
