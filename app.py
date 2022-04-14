@@ -1,3 +1,5 @@
+from logging import exception
+from msilib.schema import Error
 from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 
@@ -218,7 +220,7 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                connection = pyodbc.connect('DRIVER={FreeTDS};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                 stockNames.append('Main')
             # elif stock == 'production':
             #     connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
@@ -254,7 +256,8 @@ def searchByMpn():
         #                     params.append(param)
         # cursor.close()
         # connection.close()  
-    except:
+    except Exception as e:
+        print(e)
         return "Couldn't connect to the database"
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
@@ -279,7 +282,7 @@ def searchByFile():
 def withdraw_from_stock():
     try:
         # make db connection
-        connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')
+        connection = pyodbc.connect('Driver=C:\\Windows\\System32\\OdbcFb.dll;Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;Client=C:\\Windows\\System32\\OdbcFb.dll')
         cursor = connection.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
