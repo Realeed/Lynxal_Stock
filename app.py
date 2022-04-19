@@ -19,12 +19,10 @@ users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
 # DB connection params
 
 server = 'stockretrievaldb.database.windows.net'
-database = 'main_stock'
+database = ''
 username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
-
-connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
 
 @app.before_request
 def before_request():
@@ -228,43 +226,41 @@ def searchByMpn():
             # make db connection
 
             if stock == 'main':
-                with pyodbc.connect(connString) as connection:
-                    connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
-                    stockNames.append('Main')
+                database = 'main_stock'
+                stockNames.append('Main')
             elif stock == 'production':
-                connection = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
+                database = 'production_stock'
                 stockNames.append('Prodiction')
             elif stock == 'prototyping':
-                connection = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                database = 'prototyping_stock'
                 stockNames.append('Prototyping')
-            cursor = connection.cursor()
-            getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
-            cursor.execute(getTables)
-            tables = cursor.fetchall()
-            for table in tables:
-                query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                cursor.execute(query)
-                components = cursor.fetchall()
-                if components:
-                    appendTables(table[0])
-                for component in components:
-                    print(component)
-                    getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
-                    cursor.execute(getColumnNames)
-                    print("test")
-                    colNames = cursor.fetchall()
-                    for colName in colNames:
-                        print(colName[0])
-                        appendColumns(colName[0])
-                    print()
-                    print()
-                    for param in component:
-                        if param == None:
-                            params.append('')
-                        else:
-                            params.append(param)
-        cursor.close()
-        connection.close()  
+            connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+            with pyodbc.connect(connString) as conn:
+                with conn.cursor() as cursor:
+                    getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+                    cursor.execute(getTables)
+                    tables = cursor.fetchall()
+                    for table in tables:
+                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                        cursor.execute(query)
+                        components = cursor.fetchall()
+                        if components:
+                            appendTables(table[0])
+                        for component in components:
+                            print(component)
+                            getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+                            cursor.execute(getColumnNames)
+                            colNames = cursor.fetchall()
+                            for colName in colNames:
+                                print(colName[0])
+                                appendColumns(colName[0])
+                            print()
+                            print()
+                            for param in component:
+                                if param == None:
+                                    params.append('')
+                                else:
+                                    params.append(param)
     except Exception as e:
         return str(e)
     for index, columnName in enumerate(columnNames):
@@ -290,8 +286,8 @@ def searchByFile():
 def withdraw_from_stock():
     try:
         # make db connection
-        connection = pyodbc.connect('Driver=C:\\Windows\\System32\\OdbcFb.dll;Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;Client=C:\\Windows\\System32\\OdbcFb.dll')
-        cursor = connection.cursor()
+        conn = pyodbc.connect('Driver=C:\\Windows\\System32\\OdbcFb.dll;Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;Client=C:\\Windows\\System32\\OdbcFb.dll')
+        cursor = conn.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
         quantity = int(request.form['quantity'])
@@ -328,7 +324,7 @@ def withdraw_from_stock():
                     newStockQuantities = cursor.fetchall()
                     newStockQuantity = newStockQuantities[0][0]
                     cursor.close()
-                    connection.close()
+                    conn.close()
                     if newStockQuantity == stockQuantity - quantity: 
                         return 'Successfully updated!'
                     else:
