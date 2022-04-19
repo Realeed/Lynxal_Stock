@@ -270,7 +270,9 @@ def searchByMpn():
         return str(e)
     for index, columnName in enumerate(columnNames):
         if columnName == 'Reel Quantity':
-            if not (params[index - 1] == '' or params[index] == ''):
+            if not (params[index - 1] == 0 or params[index] == 0):
+                print(params[index - 1])
+                print(params[index])
                 if params[index - 1] % params[index] == 0:
                     params[index] = params[index - 1] // params[index]
                 else:
