@@ -231,40 +231,40 @@ def searchByMpn():
                 with pyodbc.connect(connString) as connection:
                     #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                     stockNames.append('Main')
-            # elif stock == 'production':
-            #     connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
-            #     stockNames.append('Prodiction')
-            # elif stock == 'prototyping':
-            #     connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
-            #     stockNames.append('Prototyping')
-        #     cursor = connection.cursor()
-        #     getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
-        #     cursor.execute(getTables)
-        #     tables = cursor.fetchall()
-        #     for table in tables:
-        #         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        #         cursor.execute(query)
-        #         components = cursor.fetchall()
-        #         if components:
-        #             appendTables(table[0])
-        #         for component in components:
-        #             print(component)
-        #             getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
-        #             cursor.execute(getColumnNames)
-        #             print("test")
-        #             colNames = cursor.fetchall()
-        #             for colName in colNames:
-        #                 print(colName[0])
-        #                 appendColumns(colName[0])
-        #             print()
-        #             print()
-        #             for param in component:
-        #                 if param == None:
-        #                     params.append('')
-        #                 else:
-        #                     params.append(param)
-        # cursor.close()
-        # connection.close()  
+            elif stock == 'production':
+                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
+                stockNames.append('Prodiction')
+            elif stock == 'prototyping':
+                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                stockNames.append('Prototyping')
+            cursor = connection.cursor()
+            getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+            cursor.execute(getTables)
+            tables = cursor.fetchall()
+            for table in tables:
+                query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                cursor.execute(query)
+                components = cursor.fetchall()
+                if components:
+                    appendTables(table[0])
+                for component in components:
+                    print(component)
+                    getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+                    cursor.execute(getColumnNames)
+                    print("test")
+                    colNames = cursor.fetchall()
+                    for colName in colNames:
+                        print(colName[0])
+                        appendColumns(colName[0])
+                    print()
+                    print()
+                    for param in component:
+                        if param == None:
+                            params.append('')
+                        else:
+                            params.append(param)
+        cursor.close()
+        connection.close()  
     except Exception as e:
         print(e)
         return str(e)
