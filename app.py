@@ -229,13 +229,13 @@ def searchByMpn():
 
             if stock == 'main':
                 with pyodbc.connect(connString) as connection:
-                    #connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                    connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=main_stock;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                     stockNames.append('Main')
             elif stock == 'production':
-                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
+                connection = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=production_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;') 
                 stockNames.append('Prodiction')
             elif stock == 'prototyping':
-                connection = pyodbc.connect('Driver={ODBC Driver 13 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
+                connection = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};Server=tcp:stockretrievaldb.database.windows.net,1433;Database=prototyping_stock;Uid=hakob;Pwd=SomeGoodPassword007;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;')  
                 stockNames.append('Prototyping')
             cursor = connection.cursor()
             getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
