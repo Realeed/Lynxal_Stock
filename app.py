@@ -1,4 +1,3 @@
-from email import message
 from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 
@@ -329,20 +328,19 @@ def withdraw_from_stock():
                             newStockQuantities = cursor.fetchall()
                             newStockQuantity = newStockQuantities[0][0]
                             if newStockQuantity == stockQuantity - withdrawQuantity: 
-                                return url_for('genMessage')
+                                return redirect(url_for('genMessage', message = 'Stock updated successfully!'))
                             else:
-                                return 'Something went wrong while updating the database'
+                                return redirect(url_for('genMessage', message = 'Something went wrong while updating the database!'))
                         else:
-                            return 'Not enough to withdraw!'
+                            return redirect(url_for('genMessage', message = 'Not enough to withdraw!'))
                 if not found:
-                    return "Couldn't find the component in the selected stock"
-                return "Yess!"
+                    return redirect(url_for('genMessage', message = 'Couldn\'t find the component in the selected stock!'))
     except:
-        return "Couldn't connect to the database!"
+        return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
 
 @app.route('/gen_message', methods = ['GET'])
 def genMessage():
-    return render_template('Responses/genMessage.html', message = 'Stock Successfully Updated!')
+    return render_template('Responses/genMessage.html', message = request.args.get('message'))
     
         
 
