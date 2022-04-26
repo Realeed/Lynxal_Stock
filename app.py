@@ -1,3 +1,4 @@
+from email import message
 from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 
@@ -23,6 +24,7 @@ database = ''
 username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
+connString = ''
 
 @app.before_request
 def before_request():
@@ -65,7 +67,7 @@ def chooseAction():
         action = request.form['action']
         # if action == 'search' or action == 'inventorization' or action == 'add' or action == 'withdraw':  
         #     return redirect(url_for('chooseStock', action = action))
-        if action == 'search' or action == 'withdraw':
+        if action == 'search' or action == 'withdraw' or action == 'add':
             return redirect(url_for('chooseStock', action = action))
         # elif action == 'move': 
         #     return redirect(url_for('chooseStocksToMove'))
@@ -81,7 +83,7 @@ def chooseStock():
         stock = request.form['stock']
         if stock == 'all':
             return redirect(url_for('underDev'))
-        if stock == 'all' or stock == 'main' or stock == 'production' or stock == 'prototyping':
+        if stock == 'main' or stock == 'production' or stock == 'prototyping':
             return redirect(url_for('getInfo', action = request.form['action'], stock = stock))
     if request.args['action']:
         return render_template('Stocks/mainProdProt.html')
@@ -107,9 +109,13 @@ def getInfo():
         return render_template('Queries/search.html')
     elif action == 'withdraw':
         return render_template('Queries/withdraw.html')
+    elif action == 'add':
+        return render_template('Queries/add.html')
 
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
+    if not g.user:
+        return redirect(url_for('signIn'))
     try:
         stock = request.form['stock']
         mpn = request.form['mpn']
@@ -254,8 +260,6 @@ def searchByMpn():
                             for colName in colNames:
                                 print(colName[0])
                                 appendColumns(colName[0])
-                            print()
-                            print()
                             for param in component:
                                 if param == None:
                                     params.append('')
@@ -285,56 +289,60 @@ def searchByFile():
 @app.route('/withdraw_from_stock', methods = ['POST'])
 def withdraw_from_stock():
     try:
-        # make db connection
-        conn = pyodbc.connect('Driver=C:\\Windows\\System32\\OdbcFb.dll;Server=tcp:stockretrievaldb.database.windows.net,1433;Database=stockretrieval;Uid=hakob;Pwd={SomeGoodPassword007};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;Client=C:\\Windows\\System32\\OdbcFb.dll')
-        cursor = conn.cursor()
         stock = request.form['stock']
         mpn = request.form['mpn']
-        quantity = int(request.form['quantity'])
+        withdrawQuantity = int(request.form['quantity'])
         if stock == 'main':
-            use = 'USE main_stock'
+            database = 'main_stock'
         elif stock == 'production':
-            use = 'USE production_stock'
+            database = 'production_stock'
         elif stock == 'prototyping':
-            use = 'USE prototyping_stock'
-        cursor.execute(use)
-        getTables = 'SHOW TABLES'
-        cursor.execute(getTables)
-        tables = cursor.fetchall()
-        found = False
-        for table in tables:
-            findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-            cursor.execute(findmpn)
-            components = cursor.fetchall()
-            if components:
-                found = True
-                getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                cursor.execute(getId)
-                Ids = cursor.fetchall()
-                Id = Ids[0][0]
-                getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
-                cursor.execute(getQuantity)
-                stockQuantities = cursor.fetchall()
-                stockQuantity = stockQuantities[0][0]
-                if stockQuantity >= quantity:
-                    update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {quantity}) WHERE ID = {Id}'
-                    cursor.execute(update)
-                    cursor.commit()
-                    cursor.execute(getQuantity)
-                    newStockQuantities = cursor.fetchall()
-                    newStockQuantity = newStockQuantities[0][0]
-                    cursor.close()
-                    conn.close()
-                    if newStockQuantity == stockQuantity - quantity: 
-                        return 'Successfully updated!'
-                    else:
-                        return 'Something went wrong while updating the database'
-                else:
-                    return 'Not enough to withdraw!'
-        if not found:
-            return "Couldn't find the component in the selected stock"
+            database = 'prototyping_stock'
+        connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+
+         # make db connection
+        with pyodbc.connect(connString) as conn:
+            with conn.cursor() as cursor:
+                getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+                cursor.execute(getTables)
+                tables = cursor.fetchall()
+                found = False
+                for table in tables:
+                    findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                    cursor.execute(findmpn)
+                    components = cursor.fetchall()
+                    if components:
+                        found = True
+                        getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                        cursor.execute(getId)
+                        Ids = cursor.fetchall()
+                        Id = Ids[0][0]
+                        getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
+                        cursor.execute(getQuantity)
+                        stockQuantities = cursor.fetchall()
+                        stockQuantity = stockQuantities[0][0]
+                        if stockQuantity >= withdrawQuantity:
+                            update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {withdrawQuantity}) WHERE ID = {Id}'
+                            cursor.execute(update)
+                            cursor.commit()
+                            cursor.execute(getQuantity)
+                            newStockQuantities = cursor.fetchall()
+                            newStockQuantity = newStockQuantities[0][0]
+                            if newStockQuantity == stockQuantity - withdrawQuantity: 
+                                return url_for('genMessage')
+                            else:
+                                return 'Something went wrong while updating the database'
+                        else:
+                            return 'Not enough to withdraw!'
+                if not found:
+                    return "Couldn't find the component in the selected stock"
+                return "Yess!"
     except:
         return "Couldn't connect to the database!"
+
+@app.route('/gen_message', methods = ['GET'])
+def genMessage():
+    return render_template('Responses/genMessage.html', message = 'Stock Successfully Updated!')
     
         
 
