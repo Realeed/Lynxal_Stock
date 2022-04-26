@@ -198,7 +198,7 @@ def searchByMpn():
                     cursor.execute(getTables)
                     tables = cursor.fetchall()
                     for table in tables:
-                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'{mpn}%\''
+                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber like \'{mpn}\''
                         cursor.execute(query)
                         components = cursor.fetchall()
                         print(components)
@@ -247,18 +247,19 @@ def searchByMpn():
                     cursor.execute(getTables)
                     tables = cursor.fetchall()
                     for table in tables:
-                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'{mpn}%\''
                         cursor.execute(query)
                         components = cursor.fetchall()
+                        print(components)
                         if components:
                             appendTables(table[0])
+                        numberOfComponents = 0
                         for component in components:
-                            print(component)
+                            numberOfComponents += 1
                             getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
                             cursor.execute(getColumnNames)
                             colNames = cursor.fetchall()
                             for colName in colNames:
-                                print(colName[0])
                                 appendColumns(colName[0])
                             for param in component:
                                 if param == None:
@@ -286,8 +287,56 @@ def searchByValues():
 def searchByFile():
     return redirect(url_for('underDev'))
 
+@app.route('/add_to_stock', methods = ['POST'])
+def addToStock():
+    try:
+        stock = request.form['stock']
+        mpn = request.form['mpn']
+        addQuantity = int(request.form['quantity'])
+        if stock == 'main':
+            database = 'main_stock'
+        elif stock == 'production':
+            database = 'production_stock'
+        elif stock == 'prototyping':
+            database = 'prototyping_stock'
+        connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+
+         # make db connection
+        with pyodbc.connect(connString) as conn:
+            with conn.cursor() as cursor:
+                getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+                cursor.execute(getTables)
+                tables = cursor.fetchall()
+                found = False
+                for table in tables:
+                    findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                    cursor.execute(findmpn)
+                    components = cursor.fetchall()
+                    if components:
+                        found = True
+                        getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                        cursor.execute(getId)
+                        Ids = cursor.fetchall()
+                        Id = Ids[0][0]
+                        getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
+                        cursor.execute(getQuantity)
+                        stockQuantities = cursor.fetchall()
+                        stockQuantity = stockQuantities[0][0]
+                        update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} + {addQuantity}) WHERE ID = {Id}'
+                        cursor.execute(update)
+                        cursor.commit()
+                        cursor.execute(getQuantity)
+                        newStockQuantities = cursor.fetchall()
+                        newStockQuantity = newStockQuantities[0][0]
+                        if newStockQuantity == stockQuantity + addQuantity: 
+                            return redirect(url_for('genMessage', message = 'Stock updated successfully!'))
+                        else:
+                            return redirect(url_for('genMessage', message = 'Something went wrong while updating the database!'))
+    except:
+        return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
+
 @app.route('/withdraw_from_stock', methods = ['POST'])
-def withdraw_from_stock():
+def withdrawFromStock():
     try:
         stock = request.form['stock']
         mpn = request.form['mpn']
