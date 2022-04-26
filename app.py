@@ -198,9 +198,10 @@ def searchByMpn():
                     cursor.execute(getTables)
                     tables = cursor.fetchall()
                     for table in tables:
-                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'{mpn}%\''
                         cursor.execute(query)
                         components = cursor.fetchall()
+                        print(components)
                         if components:
                             if db[0] == 'main_stock':
                                 stockNames.append('Main')
