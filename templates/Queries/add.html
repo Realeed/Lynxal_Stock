@@ -8,6 +8,18 @@
         <p id="header">
             <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
         </p>
+        {% if request.args.get('stock') == 'readyForSale' %}
+        <p class="headings" style="font-style: italic; margin-top: -20px;">PCB Information</p>
+        <div id="selectdiv" style="margin-top: 4%;">
+            <form action="add_to_stock" method="POST">
+                <p class="infoMethodsP" style="margin-top: 50px;">Type in the PCB Part Number and the Amount to add</p>
+                <input type="text" name="mpn" id="mpnInp" style="margin-top: 20px; width: 430px;" placeholder="PCB Part Number" required autofocus>
+                <input type="number" name="quantity" id="partQuantityInp" placeholder="Quantity" min="1" required>
+                <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Add">
+                <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
+            </form>
+        </div>
+        {% else %}
         <p class="headings" style="font-style: italic; margin-top: -20px;">Component Information</p>
         <div id="selectdiv" style="margin-top: 4%;">
             <form action="add_to_stock" method="POST">
@@ -18,5 +30,6 @@
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
         </div>
+        {% endif %}
     </body>
 </html>

@@ -21,10 +21,9 @@
         <p class="headings" style="font-style: italic;">Inventorization of stock</p>
         <p class="headings">Choose the stock you want to do inventorization of</p>
         {% endif %}
-
         <div id="selectdiv">
             <form action="choose_stock" method="POST">
-                <select name="stock" class="select" onchange="this.form.submit()">
+                <select name="stock" class="select" id="selectStockS" onchange="this.form.submit()">
                     <option class="options" value="selectStock"  hidden>Select the Stock</option>
                     {% if request.args.get('action') == 'search' %}
                     <option class="options" value="all" >All</option>
@@ -35,7 +34,7 @@
                     {% endif %}
                     <option class="options" value="prototyping" >Prototyping</option>
                     {% if request.args.get('action') == 'add' %}
-                    <option class="options" value="readyForSale" >PCBs ready for sale</option>
+                    <option class="options" value="ready_for_sale">PCBs ready for sale</option>
                     {% endif %}
                 </select>
                 <input type="hidden" name="action" value="{{request.args.get('action')}}">

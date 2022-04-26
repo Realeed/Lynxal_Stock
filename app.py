@@ -82,7 +82,7 @@ def chooseStock():
         stock = request.form['stock']
         if stock == 'all':
             return redirect(url_for('underDev'))
-        if stock == 'main' or stock == 'production' or stock == 'prototyping':
+        if stock == 'main' or stock == 'production' or stock == 'prototyping' or stock == 'ready_for_sale':
             return redirect(url_for('getInfo', action = request.form['action'], stock = stock))
     if request.args['action']:
         return render_template('Stocks/mainProdProt.html')
@@ -299,6 +299,8 @@ def addToStock():
             database = 'production_stock'
         elif stock == 'prototyping':
             database = 'prototyping_stock'
+        # elif stock == 'readyForSale':
+        #     return render_template('genMessage.html')
         connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
 
          # make db connection
