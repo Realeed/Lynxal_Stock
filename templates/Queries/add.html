@@ -8,7 +8,7 @@
         <p id="header">
             <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
         </p>
-        {% if request.args.get('stock') == 'readyForSale' %}
+        {% if request.args.get('stock') == 'ready_for_sale' %}
         <p class="headings" style="font-style: italic; margin-top: -20px;">PCB Information</p>
         <div id="selectdiv" style="margin-top: 4%;">
             <form action="add_to_stock" method="POST">
