@@ -182,8 +182,6 @@ def searchByMpn():
                     columnNames.append(ctNames)
                 print(columnNames)
     else:
-        # make db connection
-
         if stock == 'main':
             database = 'main_stock'
             stockNames.append('Main')
@@ -195,6 +193,7 @@ def searchByMpn():
             stockNames.append('Prototyping')
         connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
         try:
+                # make db connection
             with pyodbc.connect(connString) as conn:
                 with conn.cursor() as cursor:
                     getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
