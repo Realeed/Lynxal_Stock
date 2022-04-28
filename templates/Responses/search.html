@@ -44,7 +44,7 @@
         {% for table in tables %}
         <table id="responseTab">
             <tr>
-                <td colspan="{{paramsLen+1}}" class="responsetdheader">{{table}}</td>
+                <td colspan="{{numberOfColumns + 1}}" class="responsetdheader">{{table}}</td>
             </tr>
             <tr>
                 <td class="responsetdheadings">Stock</td>
@@ -56,12 +56,18 @@
             </tr>
             {% if stocks %}
             {% for stock in stocks %}
+            {% for component in components %}
             <tr>
                 <td class="responsetd">{{stock}}</td>
-                {% for param in params %}
+                {% for param in component %}
+                {% if param != None %}
                 <td class="responsetd">{{param}}</td>
+                {% else %}
+                <td class="responsetd"></td>
+                {% endif %}
                 {% endfor %}
-            </tr>
+            </tr>            
+            {% endfor %}
             {% endfor %}
             {% endif %}
         </table>
