@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
+from dict import tableReplace
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -116,139 +117,82 @@ def getInfo():
 def searchByMpn():
     if not g.user:
         return redirect(url_for('signIn'))
-    try:
-        stock = request.form['stock']
-        mpn = request.form['mpn']
-        stockNames = []
-        tableNames = []
-        columnNames = []
-        componentArray = []
-        def appendTables(tableName):
-            if tableName == 'diodes_leds':
-                tableNames.append('Diodes and LEDs')
-            elif tableName == 'electrolytic_capacitors':
-                tableNames.append('Electrolytic Capacitors')
-            elif tableName == 'ics':
-                tableNames.append('Integrated Circuits')
-            elif tableName == 'zener_diodes':
-                tableNames.append('Zener Diodes')
-            else:
-                tableNames.append(tableName.capitalize())
-        def appendColumns(colName):
-            #region (append column names)
-            # if tableColName == 'BoxName':
-            #     columnNames.append('Box Name')
-            # elif tableColName == 'Capacitance':
-            #     columnNames.append('Capacitance')
-            # elif tableColName == 'ID':
-            #     columnNames.append('Id')
-            # elif tableColName == 'LastUpdated':
-            #     columnNames.append('Last Updated')
-            # elif tableColName == 'ManufacturerPartNumber':
-            #     columnNames.append('Manufacturer Part Number')
-            # elif tableColName == 'Notes':
-            #     columnNames.append('Notes')
-            # elif tableColName == 'Package':
-            #     columnNames.append('Package')
-            # elif tableColName == 'Quantity':
-            #     columnNames.append('Quantity')
-            # elif tableColName == 'StandardPackQty':
-            #     columnNames.append('Reel Quantity')
-            # elif tableColName == 'TemperatureCoefficient':
-            #     columnNames.append('Temperature Coefficient')
-            # elif tableColName == 'Voltage':
-            #     columnNames.append('Voltage')
-            # elif tableColName == 'Frequency':
-            #     columnNames.append('Frequency')
-            # elif tableColName == 'LoadCapacitance':
-            #     columnNames.append('Load Capacitance')
-            # elif tableColName == 'Type':
-            #     columnNames.append('Type')
-            # elif tableColName == 'Current':
-            #     columnNames.append('Current')
-            # elif tableColName == 'Size':
-            #     columnNames.append('Size')
-            # elif tableColName == 'CurrentRating':
-            #     columnNames.append('Current Rating')
-            # elif tableColName == 'Impedance':
-            #     columnNames.append('Impedance')
-            # elif tableColName == 'Description':
-            #     columnNames.append('Description')
-            # elif tableColName == 'Inductance':
-            #     columnNames.append('Inductance')
-            # elif tableColName == 'Shielding':
-            #     columnNames.append('Shielding')
-            # elif tableColName == 'PowerRating':
-            #     columnNames.append('Power Rating')
-            # elif tableColName == 'Resistance':
-            #     columnNames.append('Resistance')
-            # elif tableColName == 'Tolerance':
-            #     columnNames.append('Tolerance')
-            # elif tableColName == 'Channel':
-            #     columnNames.append('Channel')
-            if colName == 'StandardPackQty':
-                columnNames.append('Reel Quantity')
-                return
-            if colName not in columnReplace:
-                columnNames.append(colName)
-                return
+    stock = request.form['stock']
+    mpn = request.form['mpn']
+    stockNames = []
+    tableNames = []
+    columnNames = []
+    componentArray = []
+    def appendTables(tableName):
+        if tableName in tableReplace:
+            for key in tableReplace:
+                if tableName == key:
+                    tableNames.append(tableReplace[key])
+        else:
+            tableNames.append(tableName.capitalize())
+    def appendColumns(colName):
+        if colName == 'StandardPackQty':
+            columnNames.append('Reel Quantity')
+            return
+        if colName in columnReplace:
             for key in columnReplace:
-                print('key is: ' + key + ', colName is: ' + colName)
                 if colName == key:
                     columnNames.append(columnReplace[key])
-            print(columnNames)
-            
-            #endregion
-        params = []
-        if stock == 'all':
-            getDbs = 'SHOW DATABASES'
-            cursor.execute(getDbs)
-            dbs = cursor.fetchall()
-            for db in dbs:
-                if db[0] != 'information_schema' and db[0] != 'mysql' and db[0] != 'performance_schema':
-                    use = f'USE {db[0]}'
-                    cursor.execute(use)
-                    getTables = 'SHOW TABLES'
-                    cursor.execute(getTables)
-                    tables = cursor.fetchall()
-                    for table in tables:
-                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber like \'{mpn}\''
-                        cursor.execute(query)
-                        components = cursor.fetchall()
-                        if components:
-                            if db[0] == 'main_stock':
-                                stockNames.append('Main')
-                            elif db[0] == 'production_stock':
-                                stockNames.append('Production')
-                            elif db[0] == 'prototyping_stock':
-                                stockNames.append('Prototyping')
-                            appendTables(table[0])
-                        for component in components:
-                            print(f'found in {db[0]}')
-                            print(f'found in {table[0]}')
-                            getColumnNames = f'SHOW COLUMNS FROM {table[0]}'
-                            cursor.execute(getColumnNames)
-                            colNames = cursor.fetchall()
-                            for colName in colNames:
-                                appendColumns(colName[0])
-                            for param in component:
-                                if param == 'None':
-                                    params.append('')
-                                else:
-                                    params.append(param)
         else:
-            # make db connection
+            columnNames.append(colName)
+        
+        #endregion
+    params = []
+    if stock == 'all':
+        getDbs = 'SHOW DATABASES'
+        cursor.execute(getDbs)
+        dbs = cursor.fetchall()
+        for db in dbs:
+            if db[0] != 'information_schema' and db[0] != 'mysql' and db[0] != 'performance_schema':
+                use = f'USE {db[0]}'
+                cursor.execute(use)
+                getTables = 'SHOW TABLES'
+                cursor.execute(getTables)
+                tables = cursor.fetchall()
+                for table in tables:
+                    query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber like \'{mpn}\''
+                    cursor.execute(query)
+                    components = cursor.fetchall()
+                    if components:
+                        if db[0] == 'main_stock':
+                            stockNames.append('Main')
+                        elif db[0] == 'production_stock':
+                            stockNames.append('Production')
+                        elif db[0] == 'prototyping_stock':
+                            stockNames.append('Prototyping')
+                        appendTables(table[0])
+                    for component in components:
+                        print(f'found in {db[0]}')
+                        print(f'found in {table[0]}')
+                        getColumnNames = f'SHOW COLUMNS FROM {table[0]}'
+                        cursor.execute(getColumnNames)
+                        colNames = cursor.fetchall()
+                        for colName in colNames:
+                            appendColumns(colName[0])
+                        for param in component:
+                            if param == 'None':
+                                params.append('')
+                            else:
+                                params.append(param)
+    else:
+        # make db connection
 
-            if stock == 'main':
-                database = 'main_stock'
-                stockNames.append('Main')
-            elif stock == 'production':
-                database = 'production_stock'
-                stockNames.append('Prodiction')
-            elif stock == 'prototyping':
-                database = 'prototyping_stock'
-                stockNames.append('Prototyping')
-            connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+        if stock == 'main':
+            database = 'main_stock'
+            stockNames.append('Main')
+        elif stock == 'production':
+            database = 'production_stock'
+            stockNames.append('Production')
+        elif stock == 'prototyping':
+            database = 'prototyping_stock'
+            stockNames.append('Prototyping')
+        connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+        try:
             with pyodbc.connect(connString) as conn:
                 with conn.cursor() as cursor:
                     getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
@@ -267,19 +211,21 @@ def searchByMpn():
                                 appendColumns(colName[0])
                         for component in components:
                             componentArray.append(component)
-                    for index, columnName in enumerate(columnNames):
-                        if columnName == 'Reel Quantity':
-                            for component in componentArray:
-                                if not (component[index - 1] == 0 or component[index] == 0):
-                                    if component[index - 1] % component[index] == 0:
-                                        component[index] = component[index - 1] // component[index]
-                                    else:
-                                        component[index] = round(component[index - 1] / component[index], 2)
-                                else:
-                                    component[index] = 'Not available'    
-    except Exception as e:
-        return str(e)
-    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = len(columnNames), components = componentArray)
+                        for index, columnName in enumerate(columnNames):
+                            if columnName == 'Reel Quantity':
+                                for component in componentArray:
+                                    print(component)
+                                    # if not (component[index - 1] == 0 or component[index] == 0):
+                                    #     print('yo')
+                                        # if component[index - 1] % component[index] == 0:
+                                        #     component[index] = component[index - 1] // component[index]
+                                        # else:
+                                        #     component[index] = round(component[index - 1] / component[index], 2)
+                                    # else:
+                                    #     component[index] = 'Not available'    
+        except Exception as e:
+            return str(e)
+        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = len(columnNames), components = componentArray)
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():
