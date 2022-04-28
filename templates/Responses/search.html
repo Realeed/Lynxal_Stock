@@ -55,10 +55,9 @@
                 {% endif %}
             </tr>
             {% if stocks %}
-            {% for stock in stocks %}
             {% for component in components[loop.index - 1] %}
             <tr>
-                <td class="responsetd">{{stock}}</td>
+                <td class="responsetd">{{stocks[0]}}</td>
                 {% for param in component %}
                 {% if param != None %}
                 <td class="responsetd">{{param}}</td>
@@ -67,7 +66,6 @@
                 {% endif %}
                 {% endfor %}
             </tr>            
-            {% endfor %}
             {% endfor %}
             {% endif %}
         </table>
