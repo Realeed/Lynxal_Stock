@@ -44,19 +44,19 @@
         {% for table in tables %}
         <table id="responseTab">
             <tr>
-                <td colspan="{{numberOfColumns + 1}}" class="responsetdheader">{{table}}</td>
+                <td colspan="{{numberOfColumns[loop.index - 1] + 1}}" class="responsetdheader">{{table}}</td>
             </tr>
             <tr>
                 <td class="responsetdheadings">Stock</td>
                 {% if columns %}
-                {% for column in columns %}
+                {% for column in columns[loop.index - 1] %}
                 <td class="responsetdheadings">{{column}}</td>
                 {% endfor %}
                 {% endif %}
             </tr>
             {% if stocks %}
             {% for stock in stocks %}
-            {% for component in components %}
+            {% for component in components[loop.index - 1] %}
             <tr>
                 <td class="responsetd">{{stock}}</td>
                 {% for param in component %}

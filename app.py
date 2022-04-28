@@ -132,14 +132,14 @@ def searchByMpn():
             tableNames.append(tableName.capitalize())
     def appendColumns(colName):
         if colName == 'StandardPackQty':
-            columnNames.append('Reel Quantity')
+            ctNames.append('Reel Quantity')
             return
         if colName in columnReplace:
             for key in columnReplace:
                 if colName == key:
-                    columnNames.append(columnReplace[key])
+                    ctNames.append(columnReplace[key])
         else:
-            columnNames.append(colName)
+            ctNames.append(colName)
         
         #endregion
     params = []
@@ -179,6 +179,8 @@ def searchByMpn():
                                 params.append('')
                             else:
                                 params.append(param)
+                    columnNames.append(ctNames)
+                print(columnNames)
     else:
         # make db connection
 
@@ -204,28 +206,52 @@ def searchByMpn():
                         components = cursor.fetchall()
                         if components:
                             appendTables(table[0])
+                            ctNames = []
+                            compt = []
                             getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
                             cursor.execute(getColumnNames)
                             colNames = cursor.fetchall()
                             for colName in colNames:
                                 appendColumns(colName[0])
-                        for component in components:
-                            componentArray.append(component)
-                        for index, columnName in enumerate(columnNames):
+                            columnNames.append(ctNames)
+                            for component in components:
+                                compt.append(component)
+                            componentArray.append(compt)
+                    # for i in range(len(columnNames)):
+                    #     for index, columnName in enumerate(columnNames[i]):
+                    #         print(columnNames[i])
+                    #         print('index: ' + str(index) + ', colName: ' + columnName)
+                    #         if columnName == 'Reel Quantity':
+                    #             for j in range(len(componentArray)):
+                    #                 for component in componentArray[j]:
+                    #                     print(component)
+                    #                     print(component[index - 1])
+                    #                     if not (component[index - 1] == 0 or component[index] == 0):
+                    #                         if component[index - 1] % component[index] == 0:
+                    #                             component[index] = component[index - 1] // component[index]
+                    #                         else:
+                    #                             component[index] = round(component[index - 1] / component[index], 2)
+                    #                     else:
+                    #                         component[index] = 'Not available'
+                    for i in range(len(columnNames)):
+                        for index, columnName in enumerate(columnNames[i]):
                             if columnName == 'Reel Quantity':
-                                for component in componentArray:
-                                    print(component)
-                                    # if not (component[index - 1] == 0 or component[index] == 0):
-                                    #     print('yo')
-                                        # if component[index - 1] % component[index] == 0:
-                                        #     component[index] = component[index - 1] // component[index]
-                                        # else:
-                                        #     component[index] = round(component[index - 1] / component[index], 2)
-                                    # else:
-                                    #     component[index] = 'Not available'    
+                                for component in componentArray[i]:
+                                    if not (component[index - 1] == 0 or component[index] == 0):
+                                        if component[index - 1] % component[index] == 0:
+                                            component[index] = component[index - 1] // component[index]
+                                        else:
+                                            component[index] = round(component[index - 1] / component[index], 2)
+                                    else:
+                                        component[index] = 'Not available'
+                    numberOfColumns = []
+                    for i in range(len(columnNames)):
+                        numberOfColumns.append(len(columnNames[i]))
+    
+
         except Exception as e:
             return str(e)
-        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = len(columnNames), components = componentArray)
+        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = componentArray)
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():
