@@ -26,6 +26,13 @@ username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
 connString = ''
+cursor = ''
+
+def makeDbConnection(connString):
+    global cursor
+    conn = pyodbc.connect(connString)
+    cursor = conn.cursor()
+
 
 @app.before_request
 def before_request():
@@ -194,45 +201,44 @@ def searchByMpn():
         connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
         try:
                 # make db connection
-            with pyodbc.connect(connString) as conn:
-                with conn.cursor() as cursor:
-                    getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
-                    cursor.execute(getTables)
-                    tables = cursor.fetchall()
-                    for table in tables:
-                        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'%{mpn}%\''
-                        cursor.execute(query)
-                        components = cursor.fetchall()
-                        if components:
-                            appendTables(table[0])
-                            ctNames = []
-                            compt = []
-                            getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
-                            cursor.execute(getColumnNames)
-                            colNames = cursor.fetchall()
-                            for colName in colNames:
-                                appendColumns(colName[0])
-                            columnNames.append(ctNames)
-                            for component in components:
-                                compt.append(component)
-                            componentArray.append(compt)
-                    for i in range(len(columnNames)):
-                        for index, columnName in enumerate(columnNames[i]):
-                            if columnName == 'Reel Quantity':
-                                for component in componentArray[i]:
-                                    if not (component[index - 1] == 0 or component[index] == 0):
-                                        if component[index - 1] % component[index] == 0:
-                                            component[index] = component[index - 1] // component[index]
-                                        else:
-                                            component[index] = round(component[index - 1] / component[index], 2)
-                                    else:
-                                        component[index] = 'Not available'
-                    componentLengths = []
-                    for i in range(len(componentArray)):
-                        componentLengths.append(len(componentArray[i]))
-                    numberOfColumns = []
-                    for i in range(len(columnNames)):
-                        numberOfColumns.append(len(columnNames[i]))
+            makeDbConnection(connString)
+            getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+            cursor.execute(getTables)
+            tables = cursor.fetchall()
+            for table in tables:
+                query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'%{mpn}%\''
+                cursor.execute(query)
+                components = cursor.fetchall()
+                if components:
+                    appendTables(table[0])
+                    ctNames = []
+                    compt = []
+                    getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+                    cursor.execute(getColumnNames)
+                    colNames = cursor.fetchall()
+                    for colName in colNames:
+                        appendColumns(colName[0])
+                    columnNames.append(ctNames)
+                    for component in components:
+                        compt.append(component)
+                    componentArray.append(compt)
+            for i in range(len(columnNames)):
+                for index, columnName in enumerate(columnNames[i]):
+                    if columnName == 'Reel Quantity':
+                        for component in componentArray[i]:
+                            if not (component[index - 1] == 0 or component[index] == 0):
+                                if component[index - 1] % component[index] == 0:
+                                    component[index] = component[index - 1] // component[index]
+                                else:
+                                    component[index] = round(component[index - 1] / component[index], 2)
+                            else:
+                                component[index] = 'Not available'
+            componentLengths = []
+            for i in range(len(componentArray)):
+                componentLengths.append(len(componentArray[i]))
+            numberOfColumns = []
+            for i in range(len(columnNames)):
+                numberOfColumns.append(len(columnNames[i]))
                     
     
 
