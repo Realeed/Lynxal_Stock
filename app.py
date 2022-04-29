@@ -216,6 +216,9 @@ def searchByMpn():
                             for component in components:
                                 compt.append(component)
                             componentArray.append(compt)
+                    columnLengths = []
+                    mpnIndices = []
+                    componentLengths = []
                     for i in range(len(columnNames)):
                         for index, columnName in enumerate(columnNames[i]):
                             if columnName == 'Reel Quantity':
@@ -227,15 +230,21 @@ def searchByMpn():
                                             component[index] = round(component[index - 1] / component[index], 2)
                                     else:
                                         component[index] = 'Not available'
+                            elif columnName == 'Manufacturer Part Number':
+                                columnLengths.append(len(columnNames[i]))
+                                mpnIndices.append(index)
+                    for i in range(len(componentArray)):
+                        componentLengths.append(len(componentArray[i]))
                     numberOfColumns = []
                     for i in range(len(columnNames)):
                         numberOfColumns.append(len(columnNames[i]))
+                    
     
 
         except Exception as e:
             return str(e)
         
-        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = componentArray)
+        return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = componentArray, columnLengths = columnLengths, mpnIndices = mpnIndices, componentLengths = componentLengths)
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():

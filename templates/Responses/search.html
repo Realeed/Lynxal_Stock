@@ -47,6 +47,7 @@
                 <td colspan="{{numberOfColumns[loop.index - 1] + 1}}" class="responsetdheader">{{table}}</td>
             </tr>
             <tr>
+                <span style="background-color:rgb(255, 153, 0)"></span>
                 <td class="responsetdheadings">Stock</td>
                 {% if columns %}
                 {% for column in columns[loop.index - 1] %}
@@ -71,5 +72,12 @@
         </table>
         {% endfor %}
         {% endif %}
+        <script>
+            columnLengths =  Array.from(JSON.parse('{{columnLengths}}'))
+            mpnIndices = Array.from(JSON.parse('{{mpnIndices}}'))
+            componentLengths = Array.from(JSON.parse('{{componentLengths}}'))
+            alert(componentLengths)
+            document.getElementsByClassName('responsetd')[i].innerHTML = document.getElementsByClassName('responsetd')[i].innerHTML.replace('{{mpn}}', '<span style="background-color:rgb(255, 153, 0);">{{mpn}}</span>')     
+        </script>
     </body>
 </html>
