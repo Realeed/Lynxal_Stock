@@ -42,7 +42,7 @@
         {% endif %}
         {% if tables %}
         {% for table in tables %}
-        <table id="responseTab">
+        <table class="responseTab">
             <tr>
                 <td colspan="{{numberOfColumns[loop.index - 1] + 1}}" class="responsetdheader">{{table}}</td>
             </tr>
@@ -73,11 +73,12 @@
         {% endfor %}
         {% endif %}
         <script>
-            columnLengths =  Array.from(JSON.parse('{{columnLengths}}'))
-            mpnIndices = Array.from(JSON.parse('{{mpnIndices}}'))
             componentLengths = Array.from(JSON.parse('{{componentLengths}}'))
-            alert(componentLengths)
-            document.getElementsByClassName('responsetd')[i].innerHTML = document.getElementsByClassName('responsetd')[i].innerHTML.replace('{{mpn}}', '<span style="background-color:rgb(255, 153, 0);">{{mpn}}</span>')     
+            for (i = 0; i < componentLengths.length; i++) {
+                for (row = 2; row < componentLengths[i] + 2; row++) {
+                    document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML = document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML.replace('{{mpn}}', '<span style="background-color:rgb(255, 153, 0);">{{mpn}}</span>')     
+                }
+            }
         </script>
     </body>
 </html>

@@ -107,7 +107,7 @@ select option {
     padding-left: 5px;
 }
 
-#responseTab {
+.responseTab {
     width: 100%;
     border-collapse: collapse;
     margin-top: 50px; 
