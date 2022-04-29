@@ -83,11 +83,6 @@ def searchInAllTables(db, mpn):
             for component in components:
                 compt.append(component)
             componentArray.append(compt)
-    print(tableNames)
-    print('______________')
-    print(columnNames)
-    print('______________')
-    print(componentArray)
     return tableNames, columnNames, componentArray
 
 @app.before_request
@@ -235,11 +230,11 @@ def searchByMpn():
             db = 'prototyping_stock'
             stockNames.append('Prototyping')
             
-        tableNames, columnNames, componentArray = searchInAllTables(db, mpn)
+        tableNames, columnNames, components = searchInAllTables(db, mpn)
         for i in range(len(columnNames)):
             for index, columnName in enumerate(columnNames[i]):
                 if columnName == 'Reel Quantity':
-                    for component in componentArray[i]:
+                    for component in components[i]:
                         if not (component[index - 1] == 0 or component[index] == 0):
                             if component[index - 1] % component[index] == 0:
                                 component[index] = component[index - 1] // component[index]
@@ -248,13 +243,13 @@ def searchByMpn():
                         else:
                             component[index] = 'Not available'
         componentLengths = []
-        for i in range(len(componentArray)):
-            componentLengths.append(len(componentArray[i]))
+        for i in range(len(components)):
+            componentLengths.append(len(components[i]))
         numberOfColumns = []
         for i in range(len(columnNames)):
             numberOfColumns.append(len(columnNames[i]))
     
-    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = componentArray, componentLengths = componentLengths)
+    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = components, componentLengths = componentLengths)
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():
