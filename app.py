@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
 from dict import tableReplace
+from openpyxl import load_workbook
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -85,6 +86,47 @@ def searchInAllTables(db, mpn):
             componentArray.append(compt)
     return tableNames, columnNames, componentArray
 
+def searchExactMatchInAllTables(db, mpn):
+    tableNames = []
+    columnNames = []
+    componentArray = []
+    def appendTables(tableName):
+        if tableName in tableReplace:
+            for key in tableReplace:
+                if tableName == key:
+                    tableNames.append(tableReplace[key])
+        else:
+            tableNames.append(tableName.capitalize())
+    def appendColumns(colName):
+        if colName == 'StandardPackQty':
+            ctNames.append('Reel Quantity')
+            return
+        if colName in columnReplace:
+            for key in columnReplace:
+                if colName == key:
+                    ctNames.append(columnReplace[key])
+        else:
+            ctNames.append(colName)
+    tables = getTables(db)
+    for table in tables:
+        query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        cursor.execute(query)
+        components = cursor.fetchall()
+        if components:
+            appendTables(table[0])
+            ctNames = []
+            compt = []
+            getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+            cursor.execute(getColumnNames)
+            colNames = cursor.fetchall()
+            for colName in colNames:
+                appendColumns(colName[0])
+            columnNames.append(ctNames)
+            for component in components:
+                compt.append(component)
+            componentArray.append(compt)
+    return tableNames, columnNames, componentArray
+
 def calcReelQty(columnNames, components):
     for i in range(len(columnNames)):
         for index, columnName in enumerate(columnNames[i]):
@@ -98,6 +140,17 @@ def calcReelQty(columnNames, components):
                     else:
                         component[index] = 'Not available'
 
+def getComponentLengths(components):
+    componentLengths = []
+    for i in range(len(components)):
+        componentLengths.append(len(components[i]))
+    return componentLengths
+
+def getNumberOfColumns(columnNames):
+    numberOfColumns = []
+    for i in range(len(columnNames)):
+        numberOfColumns.append(len(columnNames[i]))
+    return numberOfColumns
 
 @app.before_request
 def before_request():
@@ -191,7 +244,7 @@ def searchByMpn():
         return redirect(url_for('signIn'))
     stock = request.form['stock']
     mpn = request.form['mpn'].upper()
-    stockNames = []   
+    stocks = []   
         #endregion
     if stock == 'all':
         # getDbs = 'SHOW DATABASES'
@@ -235,24 +288,18 @@ def searchByMpn():
     else:
         if stock == 'main':
             db = 'main_stock'
-            stockNames.append('Main')
+            stocks.append('Main')
         elif stock == 'production':
             db = 'production_stock'
-            stockNames.append('Production')
+            stocks.append('Production')
         elif stock == 'prototyping':
             db = 'prototyping_stock'
-            stockNames.append('Prototyping')
+            stocks.append('Prototyping')
             
-        tableNames, columnNames, components = searchInAllTables(db, mpn)
-        calcReelQty(columnNames, components)
-        componentLengths = []
-        for i in range(len(components)):
-            componentLengths.append(len(components[i]))
-        numberOfColumns = []
-        for i in range(len(columnNames)):
-            numberOfColumns.append(len(columnNames[i]))
+        tables, columns, components = searchInAllTables(db, mpn)
+        calcReelQty(columns, components)
     
-    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stockNames, tables = tableNames, columns = columnNames, numberOfColumns = numberOfColumns, components = components, componentLengths = componentLengths)
+    return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
 
 @app.route('/search_by_values', methods = ['POST'])
 def searchByValues():
@@ -260,7 +307,44 @@ def searchByValues():
 
 @app.route('/search_by_file', methods = ['POST'])
 def searchByFile():
-    return redirect(url_for('underDev'))
+    stock = request.form['stock']
+    excel = request.files['excel']
+    filename = excel.filename
+    path = 'resources\\'
+    fullPath = path + filename
+    excel.save(fullPath)
+    stockNames = []
+    if stock == 'main':
+        db = 'main_stock'
+        stockNames.append('Main')
+    elif stock == 'production':
+        db = 'production_stock'
+        stockNames.append('Production')
+    elif stock == 'prototyping':
+        db = 'prototyping_stock'
+        stockNames.append('Prototyping')
+    wb = load_workbook(fullPath)
+    sheet = wb.active
+    def getColumn(columnName):
+        for col in range(sheet.max_column):
+            if sheet[1][col].value == columnName:
+                return col
+    mpns = []
+    for row in range(2, sheet.max_row + 1):
+        mpns.append(sheet[row][getColumn('Comment')].value)
+    
+    tables = []
+    columns = []
+    components = []
+    for i in range (len(mpns)):
+        tableNames, columnNames, comps = searchInAllTables(db, mpns[i])
+        for tableName in tableNames:  
+            tables.append(tableName)
+        for columnName in columnNames:
+            columns.append(columnName)
+        for comp in comps:
+            components.append(comp)
+    return render_template('Responses/search.html', stock = stock, stocks = stockNames, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(comps))
 
 @app.route('/add_to_stock', methods = ['POST'])
 def addToStock():
