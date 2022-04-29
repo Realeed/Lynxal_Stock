@@ -85,6 +85,20 @@ def searchInAllTables(db, mpn):
             componentArray.append(compt)
     return tableNames, columnNames, componentArray
 
+def calcReelQty(columnNames, components):
+    for i in range(len(columnNames)):
+        for index, columnName in enumerate(columnNames[i]):
+            if columnName == 'Reel Quantity':
+                for component in components[i]:
+                    if not (component[index - 1] == 0 or component[index] == 0):
+                        if component[index - 1] % component[index] == 0:
+                            component[index] = component[index - 1] // component[index]
+                        else:
+                            component[index] = round(component[index - 1] / component[index], 2)
+                    else:
+                        component[index] = 'Not available'
+
+
 @app.before_request
 def before_request():
     g.user = None
@@ -176,10 +190,9 @@ def searchByMpn():
     if not g.user:
         return redirect(url_for('signIn'))
     stock = request.form['stock']
-    mpn = request.form['mpn']
+    mpn = request.form['mpn'].upper()
     stockNames = []   
         #endregion
-    params = []
     if stock == 'all':
         # getDbs = 'SHOW DATABASES'
         # cursor.execute(getDbs)
@@ -231,17 +244,7 @@ def searchByMpn():
             stockNames.append('Prototyping')
             
         tableNames, columnNames, components = searchInAllTables(db, mpn)
-        for i in range(len(columnNames)):
-            for index, columnName in enumerate(columnNames[i]):
-                if columnName == 'Reel Quantity':
-                    for component in components[i]:
-                        if not (component[index - 1] == 0 or component[index] == 0):
-                            if component[index - 1] % component[index] == 0:
-                                component[index] = component[index - 1] // component[index]
-                            else:
-                                component[index] = round(component[index - 1] / component[index], 2)
-                        else:
-                            component[index] = 'Not available'
+        calcReelQty(columnNames, components)
         componentLengths = []
         for i in range(len(components)):
             componentLengths.append(len(components[i]))
