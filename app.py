@@ -26,7 +26,6 @@ username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
 connString = ''
-cursor = ''
 
 def makeDbConnection(connString):
     global cursor
