@@ -76,8 +76,9 @@
             componentLengths = Array.from(JSON.parse('{{componentLengths}}'))
             for (i = 0; i < componentLengths.length; i++) {
                 for (row = 2; row < componentLengths[i] + 2; row++) {
-                    if (!document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML == '{{mpn}}')
-                    document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML = document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML.replace('{{mpn}}', '<span style="background-color:rgb(255, 153, 0);">{{mpn}}</span>')     
+                    if (document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML != '{{mpn}}') {
+                        document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML = document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML.replace('{{mpn}}', '<span style="background-color:rgb(255, 153, 0);">{{mpn}}</span>')     
+                    }
                 }
             }
         </script>
