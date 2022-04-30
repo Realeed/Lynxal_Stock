@@ -374,9 +374,23 @@ def searchByFile():
             columns.append(columnName)
         for comp in comps:
             components.append(comp)
-    print(tables)
-    print(columns)
-    print(components)
+
+    indicesOfSame = []
+    for i in range(len(tables)):
+        if tables[i] in tables[slice(i)]:
+            continue
+        for j in range(i + 1, len(tables)):
+            if tables[i] == tables[j]:
+                components[i] = components[i] + components[j]
+                indicesOfSame.append(j)
+    
+    removed = 0
+    for index in indicesOfSame:
+        del tables[index - removed]
+        del columns[index - removed]
+        del components[index - removed]
+        removed += 1
+
     calcReelQty(columns, components)
 
     return render_template('Responses/search.html', stock = stock, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
@@ -516,6 +530,5 @@ def genMessage():
     return render_template('Responses/genMessage.html', message = request.args.get('message'))
     
         
-
 if __name__  == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)

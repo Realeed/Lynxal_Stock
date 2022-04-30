@@ -1,7 +1,7 @@
-arr = [[1, 4], [5, 2]]
+numbers = [1, 2, 5, 2, 8]
 
-arr[0] = arr[0] + arr[1]
-arr.remove(arr[1])
-print(arr)
+del numbers[3]
+
+print(numbers)
 
 
