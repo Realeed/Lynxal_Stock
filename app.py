@@ -21,7 +21,6 @@ users = []
 users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
 
 # DB connection params
-
 server = 'stockretrievaldb.database.windows.net'
 db = ''
 username = 'hakob'
