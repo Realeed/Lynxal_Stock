@@ -1,3 +1,5 @@
+from csv import excel
+from fileinput import filename
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
@@ -190,15 +192,14 @@ def getNumberOfColumns(columnNames):
         numberOfColumns.append(len(columnNames[i]))
     return numberOfColumns
 
-def getExcelWbSheetFullpath():
+def getExcelWbSheetFilename():
     excel = request.files['excel']
     filename = excel.filename
     # path = 'resources\\'
-    fullPath = filename
-    excel.save(fullPath)
-    wb = load_workbook(fullPath)
+    excel.save(filename)
+    wb = load_workbook(filename)
     sheet = wb.active
-    return wb, sheet, fullPath
+    return wb, sheet, filename
 
 def getExcelColumn(sheet, columnName):
     for col in range(sheet.max_column):
@@ -356,7 +357,7 @@ def searchByFile():
     stock = request.form['stock']
     stocks = getStocks()
     setdb()
-    sheet = getExcelWbSheetFullpath()[1]
+    sheet = getExcelWbSheetFilename()[1]
     mpns = []
     for row in range(2, sheet.max_row + 1):
         if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
@@ -486,7 +487,7 @@ def withdrawFromStock():
 @app.route('/update_bom_file', methods = ['POST'])
 def updateBOM():
     setdb()
-    wb, sheet, fullPath = getExcelWbSheetFullpath()
+    wb, sheet, filename = getExcelWbSheetFilename()
     mpns = []
     for row in range(2, sheet.max_row + 1):
         if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
@@ -505,9 +506,10 @@ def updateBOM():
         sheet[row][sheet.max_column - 1]._style = copy(sheet[row][sheet.max_column - 2]._style)
         sheet[row][sheet.max_column - 1].value = quantities[row - 2]
 
-    wb.save(fullPath)
+    path = '(Updated) ' + filename
+    wb.save(path)
     
-    return send_file(fullPath)
+    return send_file(path)
 
 @app.route('/gen_message', methods = ['GET'])
 def genMessage():
