@@ -1,3 +1,4 @@
 Flask
 pyodbc
-azure-functions
+openpyxl
+copy

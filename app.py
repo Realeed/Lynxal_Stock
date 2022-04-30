@@ -1,9 +1,9 @@
-from copy import copy
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
+from copy import copy
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -508,7 +508,6 @@ def updateBOM():
     wb.save(fullPath)
     
     return send_file(fullPath)
-
 
 @app.route('/gen_message', methods = ['GET'])
 def genMessage():
