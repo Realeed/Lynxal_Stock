@@ -10,7 +10,7 @@
         </p>
         <div id="selectdiv" style="margin-top: 4%;">
             <form action="update_bom_file" enctype="multipart/form-data" method="POST">
-                <label for="excel" id="excelLabel">Upload the file: </label>
+                <label for="excel" id="excelLabel">Upload the file you want to update: </label>
                 <input type="file" name="excel" id="excelInp" onchange="this.form.submit()">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
