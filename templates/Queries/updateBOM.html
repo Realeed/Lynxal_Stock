@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lynxal Stock</title>
+        <link rel="stylesheet" href="../static/styles/main.css">
+    </head>
+    <body>
+        <p id="header">
+            <a id="headerhref" href="{{url_for('main')}}">Lynxal Stock</a>
+        </p>
+        <div id="selectdiv" style="margin-top: 4%;">
+            <form action="update_bom_file" enctype="multipart/form-data" method="POST">
+                <label for="excel" id="excelLabel">Upload the file: </label>
+                <input type="file" name="excel" id="excelInp" onchange="this.form.submit()">
+                <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
+            </form>
+        </div>
+    </body>
+</html>
