@@ -1,12 +1,7 @@
-i = 2
+arr = [[1, 4], [5, 2]]
 
-def change():
-    global i
-    i = 3
-
-change()
-
-print(i)
-
+arr[0] = arr[0] + arr[1]
+arr.remove(arr[1])
+print(arr)
 
 

@@ -20,6 +20,9 @@
         {% elif request.args.get('action') == 'inventorization' %}
         <p class="headings" style="font-style: italic;">Inventorization of stock</p>
         <p class="headings">Choose the stock you want to do inventorization of</p>
+        {% elif request.args.get('action') == 'updateBOM' %}
+        <p class="headings" style="font-style: italic;">Updating BOM file</p>
+        <p class="headings">Choose the stock you want to do get Quantities from</p>
         {% endif %}
         <div id="selectdiv">
             <form action="choose_stock" method="POST">

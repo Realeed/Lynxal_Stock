@@ -1,4 +1,5 @@
-from flask import Flask, redirect, url_for, render_template, request, g, session
+from copy import copy
+from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
 from dict import tableReplace
@@ -27,6 +28,28 @@ username = 'hakob'
 password = '{SomeGoodPassword007}'   
 driver= '{ODBC Driver 17 for SQL Server}'
 connString = ''
+
+def getStocks():
+    stock = request.form['stock']
+    stocks = []
+    if stock == 'main':
+        stocks.append('Main')
+    elif stock == 'production':
+        stocks.append('Production')
+    elif stock == 'prototyping':
+        stocks.append('Prototyping')
+    return stocks
+
+def setdb():
+    global db
+    stock = request.form['stock']
+    if stock == 'main':
+        db = 'main_stock'        
+    elif stock == 'production':
+        db = 'production_stock'       
+    elif stock == 'prototyping':
+        db = 'prototyping_stock'
+    
 
 def dbConnect(connString):
     global cursor
@@ -127,9 +150,24 @@ def searchExactMatchInAllTables(db, mpn):
             componentArray.append(compt)
     return tableNames, columnNames, componentArray
 
-def calcReelQty(columnNames, components):
-    for i in range(len(columnNames)):
-        for index, columnName in enumerate(columnNames[i]):
+def getQuantity(mpn):
+    tables = getTables(db)
+    for table in tables:
+        query = f'SELECT Quantity FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        cursor.execute(query)
+        quantity = cursor.fetchall()
+        if quantity:
+            if len(quantity) > 1:
+                qty = 0
+                for i in range(len(quantity)):
+                    qty += quantity[i][0]
+                return qty
+            return quantity[0][0]
+
+
+def calcReelQty(columns, components):
+    for i in range(len(columns)):
+        for index, columnName in enumerate(columns[i]):
             if columnName == 'Reel Quantity':
                 for component in components[i]:
                     if not (component[index - 1] == 0 or component[index] == 0):
@@ -151,6 +189,21 @@ def getNumberOfColumns(columnNames):
     for i in range(len(columnNames)):
         numberOfColumns.append(len(columnNames[i]))
     return numberOfColumns
+
+def getExcelWbSheetFullpath():
+    excel = request.files['excel']
+    filename = excel.filename
+    path = 'resources\\'
+    fullPath = path + filename
+    excel.save(fullPath)
+    wb = load_workbook(fullPath)
+    sheet = wb.active
+    return wb, sheet, fullPath
+
+def getExcelColumn(sheet, columnName):
+    for col in range(sheet.max_column):
+        if sheet[1][col].value == columnName:
+            return col
 
 @app.before_request
 def before_request():
@@ -193,7 +246,7 @@ def chooseAction():
         action = request.form['action']
         # if action == 'search' or action == 'inventorization' or action == 'add' or action == 'withdraw':  
         #     return redirect(url_for('chooseStock', action = action))
-        if action == 'search' or action == 'withdraw' or action == 'add':
+        if action == 'search' or action == 'withdraw' or action == 'add' or action == 'updateBOM':
             return redirect(url_for('chooseStock', action = action))
         # elif action == 'move': 
         #     return redirect(url_for('chooseStocksToMove'))
@@ -237,6 +290,8 @@ def getInfo():
         return render_template('Queries/withdraw.html')
     elif action == 'add':
         return render_template('Queries/add.html')
+    elif action == 'updateBOM':
+        return render_template('Queries/updateBOM.html')
 
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
@@ -244,7 +299,7 @@ def searchByMpn():
         return redirect(url_for('signIn'))
     stock = request.form['stock']
     mpn = request.form['mpn'].upper()
-    stocks = []   
+    stocks = getStocks()   
         #endregion
     if stock == 'all':
         # getDbs = 'SHOW DATABASES'
@@ -286,16 +341,7 @@ def searchByMpn():
         #         print(columnNames)
         print('hi')
     else:
-        if stock == 'main':
-            db = 'main_stock'
-            stocks.append('Main')
-        elif stock == 'production':
-            db = 'production_stock'
-            stocks.append('Production')
-        elif stock == 'prototyping':
-            db = 'prototyping_stock'
-            stocks.append('Prototyping')
-            
+        setdb()
         tables, columns, components = searchInAllTables(db, mpn)
         calcReelQty(columns, components)
     
@@ -308,43 +354,31 @@ def searchByValues():
 @app.route('/search_by_file', methods = ['POST'])
 def searchByFile():
     stock = request.form['stock']
-    excel = request.files['excel']
-    filename = excel.filename
-    path = 'resources\\'
-    fullPath = path + filename
-    excel.save(fullPath)
-    stockNames = []
-    if stock == 'main':
-        db = 'main_stock'
-        stockNames.append('Main')
-    elif stock == 'production':
-        db = 'production_stock'
-        stockNames.append('Production')
-    elif stock == 'prototyping':
-        db = 'prototyping_stock'
-        stockNames.append('Prototyping')
-    wb = load_workbook(fullPath)
-    sheet = wb.active
-    def getColumn(columnName):
-        for col in range(sheet.max_column):
-            if sheet[1][col].value == columnName:
-                return col
+    stocks = getStocks()
+    setdb()
+    sheet = getExcelWbSheetFullpath()[1]
     mpns = []
     for row in range(2, sheet.max_row + 1):
-        mpns.append(sheet[row][getColumn('Comment')].value)
-    
+        if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+            mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
+    print(mpns)
     tables = []
     columns = []
     components = []
     for i in range (len(mpns)):
         tableNames, columnNames, comps = searchInAllTables(db, mpns[i])
-        for tableName in tableNames:  
+        for tableName in tableNames:
             tables.append(tableName)
         for columnName in columnNames:
             columns.append(columnName)
         for comp in comps:
             components.append(comp)
-    return render_template('Responses/search.html', stock = stock, stocks = stockNames, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(comps))
+    print(tables)
+    print(columns)
+    print(components)
+    calcReelQty(columns, components)
+
+    return render_template('Responses/search.html', stock = stock, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
 
 @app.route('/add_to_stock', methods = ['POST'])
 def addToStock():
@@ -448,6 +482,33 @@ def withdrawFromStock():
                     return redirect(url_for('genMessage', message = 'Couldn\'t find the component in the selected stock!'))
     except:
         return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
+
+@app.route('/update_bom_file', methods = ['POST'])
+def updateBOM():
+    setdb()
+    wb, sheet, fullPath = getExcelWbSheetFullpath()
+    mpns = []
+    for row in range(2, sheet.max_row + 1):
+        if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+            mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
+    quantities = []
+    for mpn in mpns:
+        quantities.append(getQuantity(mpn))
+    for index, quantity in enumerate(quantities):
+        if quantity == None:
+            quantities[index] = 0
+
+    sheet.cell(1, sheet.max_column + 1)._style = copy(sheet.cell(1, sheet.max_column)._style)
+    sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
+    sheet.cell(1, sheet.max_column).value = 'Lynxal Stock'
+    for row in range (2, sheet.max_row + 1):
+        sheet[row][sheet.max_column - 1]._style = copy(sheet[row][sheet.max_column - 2]._style)
+        sheet[row][sheet.max_column - 1].value = quantities[row - 2]
+
+    wb.save(fullPath)
+    
+    return send_file(fullPath)
+
 
 @app.route('/gen_message', methods = ['GET'])
 def genMessage():
