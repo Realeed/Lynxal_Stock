@@ -3,6 +3,7 @@ import pyodbc
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
+from copy import copy
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -20,6 +21,7 @@ users = []
 users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
 
 # DB connection params
+
 server = 'stockretrievaldb.database.windows.net'
 db = ''
 username = 'hakob'
@@ -496,11 +498,11 @@ def updateBOM():
         if quantity == None:
             quantities[index] = 0
 
-    # sheet.cell(1, sheet.max_column + 1)._style = copy(sheet.cell(1, sheet.max_column)._style)
+    sheet.cell(1, sheet.max_column + 1)._style = copy(sheet.cell(1, sheet.max_column)._style)
     sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
     sheet.cell(1, sheet.max_column).value = 'Lynxal Stock'
     for row in range (2, sheet.max_row + 1):
-        # sheet[row][sheet.max_column - 1]._style = copy(sheet[row][sheet.max_column - 2]._style)
+        sheet[row][sheet.max_column - 1]._style = copy(sheet[row][sheet.max_column - 2]._style)
         sheet[row][sheet.max_column - 1].value = quantities[row - 2]
 
     wb.save(fullPath)
