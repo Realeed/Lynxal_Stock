@@ -193,8 +193,8 @@ def getNumberOfColumns(columnNames):
 def getExcelWbSheetFullpath():
     excel = request.files['excel']
     filename = excel.filename
-    path = 'resources\\'
-    fullPath = path + filename
+    # path = 'resources\\'
+    fullPath = filename
     excel.save(fullPath)
     wb = load_workbook(fullPath)
     sheet = wb.active
