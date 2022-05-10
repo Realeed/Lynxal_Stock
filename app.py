@@ -1,9 +1,11 @@
+from email import message
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
 from copy import copy
+import json
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -192,7 +194,7 @@ def withdraw(mpn, qty):
             else:
                 return 'Not enough to withdraw!'
     if not found:
-        return 'Couldn\'t find the component in the selected stock!'
+        return 'Couldn\'t find the component!'
 
 def add(mpn, qty):
     tables = getTables()
@@ -258,8 +260,9 @@ def getExcelWbSheetFilename():
 
 def getExcelColumn(sheet, columnName):
     for col in range(sheet.max_column):
-        if sheet[1][col].value == columnName:
+        if sheet[1][col].value == columnName or sheet[1][col].value == columnName.lower() or sheet[1][col].value == columnName.upper():
             return col
+    return None
 
 @app.before_request
 def before_request():
@@ -332,7 +335,7 @@ def chooseStocksToMove():
     if not g.user:
         return redirect(url_for('signIn'))
     if request.method == 'POST':
-        print('')
+        pass
     return render_template('Stocks/moveStocks.html')
 
 @app.route('/info_query', methods = ['GET'])
@@ -412,10 +415,10 @@ def searchByFile():
     stocks = getStocks()
     sheet = getExcelWbSheetFilename()[1]
     mpns = []
-    for row in range(2, sheet.max_row + 1):
-        if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
-            mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
-    print(mpns)
+    if getExcelColumn(sheet, 'Comment') != None:
+        for row in range(2, sheet.max_row + 1):
+            if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+                mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
     tables = []
     columns = []
     components = []
@@ -462,10 +465,34 @@ def withdrawFromStock():
 
 @app.route('/withdraw_by_file', methods = ['POST'])
 def withdrawByFile():
-    quantity = int(request.form['quantity'])
+    PCBquantity = int(request.form['quantity'])
     sheet = getExcelWbSheetFilename()[1]
+    mpns = []
+    qtys = []
+    msgs = []
+    if getExcelColumn(sheet, "Comment") != None:
+        for row in range(2, sheet.max_row + 1):
+            if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+                mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
+                qtys.append(sheet[row][getExcelColumn(sheet, 'Quantity')].value)
+    for i in range(len(mpns)):
+        msgs.append(withdraw(mpns[i], PCBquantity * qtys[i]))
+
+    notfoundMpns = []
+    messages = []
+    for i in range(len(msgs)):
+        if msgs[i] == 'Something went wrong while updating the database!':
+            notfoundMpns.append(mpns[i])
+            messages.append('couldn\'t update!')
+        elif msgs[i] == 'Not enough to withdraw!':
+            notfoundMpns.append(mpns[i])
+            messages.append('not enough to withdraw!')
+        elif msgs[i] == 'Couldn\'t find the component!':
+            notfoundMpns.append(mpns[i])
+            messages.append('couldn\'t find the component!')
+
+    return render_template('Responses/genMessage.html', message = 'Stock updated successfully!',  messages = messages, notfoundMpns = notfoundMpns)
     
-    return render_template("Responses/underDev.html")
 
 @app.route('/update_bom_file', methods = ['POST'])
 def updateBOM():
