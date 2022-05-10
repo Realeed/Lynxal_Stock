@@ -47,7 +47,7 @@ def dbConnect(connString):
         cursor = conn.cursor()
         return cursor
     except Exception as e:
-        return str(e)
+        redirect(url_for('genMessage', message = str(e)))
 
 def getTables():
     stock = request.form['stock']
@@ -106,7 +106,7 @@ def searchInAllTables(mpn):
             componentArray.append(compt)
     return tableNames, columnNames, componentArray
 
-def searchExactMatchInAllTables(db, mpn):
+def searchExactMatchInAllTables(mpn):
     tableNames = []
     columnNames = []
     componentArray = []
@@ -161,6 +161,66 @@ def getQuantity(mpn):
                 return qty
             return quantity[0][0]
 
+def withdraw(mpn, qty):
+    tables = getTables()
+    found = False
+    for table in tables:
+        findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        cursor.execute(findmpn)
+        components = cursor.fetchall()
+        if components:
+            found = True
+            getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+            cursor.execute(getId)
+            Ids = cursor.fetchall()
+            Id = Ids[0][0]
+            getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
+            cursor.execute(getQuantity)
+            stockQuantities = cursor.fetchall()
+            stockQuantity = stockQuantities[0][0]
+            if stockQuantity >= qty:
+                update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
+                cursor.execute(update)
+                cursor.commit()
+                cursor.execute(getQuantity)
+                newStockQuantities = cursor.fetchall()
+                newStockQuantity = newStockQuantities[0][0]
+                if newStockQuantity == stockQuantity - qty: 
+                    return 'Stock updated successfully!'
+                else:
+                    return 'Something went wrong while updating the database!'
+            else:
+                return 'Not enough to withdraw!'
+    if not found:
+        return 'Couldn\'t find the component in the selected stock!'
+
+def add(mpn, qty):
+    tables = getTables()
+    found = False
+    for table in tables:
+        findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        cursor.execute(findmpn)
+        components = cursor.fetchall()
+        if components:
+            found = True
+            getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+            cursor.execute(getId)
+            Ids = cursor.fetchall()
+            Id = Ids[0][0]
+            getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
+            cursor.execute(getQuantity)
+            stockQuantities = cursor.fetchall()
+            stockQuantity = stockQuantities[0][0]
+            update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} + {qty}) WHERE ID = {Id}'
+            cursor.execute(update)
+            cursor.commit()
+            cursor.execute(getQuantity)
+            newStockQuantities = cursor.fetchall()
+            newStockQuantity = newStockQuantities[0][0]
+            if newStockQuantity == stockQuantity + qty: 
+                return 'Stock updated successfully!'
+            else:
+                return 'Something went wrong while updating the database!'
 
 def calcReelQty(columns, components):
     for i in range(len(columns)):
@@ -390,115 +450,21 @@ def searchByFile():
 
 @app.route('/add_to_stock', methods = ['POST'])
 def addToStock():
-    
-    stock = request.form['stock']
     mpn = request.form['mpn']
-    addQuantity = int(request.form['quantity'])
-    if stock == 'main':
-        database = 'main_stock'
-    elif stock == 'production':
-        database = 'production_stock'
-    elif stock == 'prototyping':
-        database = 'prototyping_stock'
-    # elif stock == 'readyForSale':
-    #     return render_template('genMessage.html')
-    connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
-    try:
-         # make db connection
-        with pyodbc.connect(connString) as conn:
-            with conn.cursor() as cursor:
-                getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
-                cursor.execute(getTables)
-                tables = cursor.fetchall()
-                found = False
-                for table in tables:
-                    findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                    cursor.execute(findmpn)
-                    components = cursor.fetchall()
-                    if components:
-                        found = True
-                        getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                        cursor.execute(getId)
-                        Ids = cursor.fetchall()
-                        Id = Ids[0][0]
-                        getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
-                        cursor.execute(getQuantity)
-                        stockQuantities = cursor.fetchall()
-                        stockQuantity = stockQuantities[0][0]
-                        update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} + {addQuantity}) WHERE ID = {Id}'
-                        cursor.execute(update)
-                        cursor.commit()
-                        cursor.execute(getQuantity)
-                        newStockQuantities = cursor.fetchall()
-                        newStockQuantity = newStockQuantities[0][0]
-                        if newStockQuantity == stockQuantity + addQuantity: 
-                            return redirect(url_for('genMessage', message = 'Stock updated successfully!'))
-                        else:
-                            return redirect(url_for('genMessage', message = 'Something went wrong while updating the database!'))
-    except:
-        return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
+    qty = int(request.form['quantity'])
+    return redirect(url_for('genMessage', message = add(mpn, qty)))
 
 @app.route('/withdraw_from_stock', methods = ['POST'])
 def withdrawFromStock():
-    stock = request.form['stock']
     mpn = request.form['mpn']
-    withdrawQuantity = int(request.form['quantity'])
-    if stock == 'main':
-        database = 'main_stock'
-    elif stock == 'production':
-        database = 'production_stock'
-    elif stock == 'prototyping':
-        database = 'prototyping_stock'
-    connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
-    try:
-         # make db connection
-        with pyodbc.connect(connString) as conn:
-            with conn.cursor() as cursor:
-                getTables = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
-                cursor.execute(getTables)
-                tables = cursor.fetchall()
-                found = False
-                for table in tables:
-                    findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                    cursor.execute(findmpn)
-                    components = cursor.fetchall()
-                    if components:
-                        found = True
-                        getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-                        cursor.execute(getId)
-                        Ids = cursor.fetchall()
-                        Id = Ids[0][0]
-                        getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
-                        cursor.execute(getQuantity)
-                        stockQuantities = cursor.fetchall()
-                        stockQuantity = stockQuantities[0][0]
-                        if stockQuantity >= withdrawQuantity:
-                            update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {withdrawQuantity}) WHERE ID = {Id}'
-                            cursor.execute(update)
-                            cursor.commit()
-                            cursor.execute(getQuantity)
-                            newStockQuantities = cursor.fetchall()
-                            newStockQuantity = newStockQuantities[0][0]
-                            if newStockQuantity == stockQuantity - withdrawQuantity: 
-                                return redirect(url_for('genMessage', message = 'Stock updated successfully!'))
-                            else:
-                                return redirect(url_for('genMessage', message = 'Something went wrong while updating the database!'))
-                        else:
-                            return redirect(url_for('genMessage', message = 'Not enough to withdraw!'))
-                if not found:
-                    return redirect(url_for('genMessage', message = 'Couldn\'t find the component in the selected stock!'))
-    except:
-        return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
+    qty = int(request.form['quantity'])
+    return redirect(url_for('genMessage', message = withdraw(mpn, qty)))
 
 @app.route('/withdraw_by_file', methods = ['POST'])
 def withdrawByFile():
-    stock = request.form['stock']
-    quantity = request.form['quantity']
-    print(stock)
-    print(quantity)
+    quantity = int(request.form['quantity'])
     sheet = getExcelWbSheetFilename()[1]
-
-
+    
     return render_template("Responses/underDev.html")
 
 @app.route('/update_bom_file', methods = ['POST'])
