@@ -17,6 +17,14 @@
                 <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Withdraw">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
+            <p class="infoMethodsP" style="margin-top: 100px; margin-left: -250px;">or upload an Excel file</p>
+            <form action="withdraw_by_file" enctype="multipart/form-data" method="POST">
+                <label for="excel" style="margin-left: -5px;" id="excelLabel">Upload the file: </label>
+                <input type="file" style="width: 280px;" name="excel" id="excelInp">
+                <input type="number" name="quantity" style="margin-left: 0px;" id="partQuantityInp" placeholder="Quantity" min="1" required>
+                <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Withdraw">
+                <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
+            </form>
         </div>
     </body>
 </html>

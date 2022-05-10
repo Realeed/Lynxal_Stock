@@ -1,5 +1,3 @@
-from csv import excel
-from fileinput import filename
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
@@ -41,18 +39,7 @@ def getStocks():
     elif stock == 'prototyping':
         stocks.append('Prototyping')
     return stocks
-
-def setdb():
-    global db
-    stock = request.form['stock']
-    if stock == 'main':
-        db = 'main_stock'        
-    elif stock == 'production':
-        db = 'production_stock'       
-    elif stock == 'prototyping':
-        db = 'prototyping_stock'
-    
-
+ 
 def dbConnect(connString):
     global cursor
     try:
@@ -62,15 +49,23 @@ def dbConnect(connString):
     except Exception as e:
         return str(e)
 
-def getTables(db):
+def getTables():
+    stock = request.form['stock']
+    if stock == 'main':
+        db = 'main_stock'        
+    elif stock == 'production':
+        db = 'production_stock'       
+    elif stock == 'prototyping':
+        db = 'prototyping_stock'
     connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+db+';UID='+username+';PWD='+ password
     cursor = dbConnect(connString)
     getTablesCommand = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
     cursor.execute(getTablesCommand)
     tables = cursor.fetchall()
+    db = ''
     return tables
 
-def searchInAllTables(db, mpn):
+def searchInAllTables(mpn):
     tableNames = []
     columnNames = []
     componentArray = []
@@ -91,7 +86,7 @@ def searchInAllTables(db, mpn):
                     ctNames.append(columnReplace[key])
         else:
             ctNames.append(colName)
-    tables = getTables(db)
+    tables = getTables()
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'%{mpn}%\''
         cursor.execute(query)
@@ -132,7 +127,7 @@ def searchExactMatchInAllTables(db, mpn):
                     ctNames.append(columnReplace[key])
         else:
             ctNames.append(colName)
-    tables = getTables(db)
+    tables = getTables()
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
         cursor.execute(query)
@@ -153,7 +148,7 @@ def searchExactMatchInAllTables(db, mpn):
     return tableNames, columnNames, componentArray
 
 def getQuantity(mpn):
-    tables = getTables(db)
+    tables = getTables()
     for table in tables:
         query = f'SELECT Quantity FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
         cursor.execute(query)
@@ -340,10 +335,9 @@ def searchByMpn():
         #                         params.append(param)
         #             columnNames.append(ctNames)
         #         print(columnNames)
-        print('hi')
+        pass
     else:
-        setdb()
-        tables, columns, components = searchInAllTables(db, mpn)
+        tables, columns, components = searchInAllTables(mpn)
         calcReelQty(columns, components)
     
     return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
@@ -356,7 +350,6 @@ def searchByValues():
 def searchByFile():
     stock = request.form['stock']
     stocks = getStocks()
-    setdb()
     sheet = getExcelWbSheetFilename()[1]
     mpns = []
     for row in range(2, sheet.max_row + 1):
@@ -367,7 +360,7 @@ def searchByFile():
     columns = []
     components = []
     for i in range (len(mpns)):
-        tableNames, columnNames, comps = searchInAllTables(db, mpns[i])
+        tableNames, columnNames, comps = searchInAllTables(mpns[i])
         for tableName in tableNames:
             tables.append(tableName)
         for columnName in columnNames:
@@ -397,20 +390,20 @@ def searchByFile():
 
 @app.route('/add_to_stock', methods = ['POST'])
 def addToStock():
+    
+    stock = request.form['stock']
+    mpn = request.form['mpn']
+    addQuantity = int(request.form['quantity'])
+    if stock == 'main':
+        database = 'main_stock'
+    elif stock == 'production':
+        database = 'production_stock'
+    elif stock == 'prototyping':
+        database = 'prototyping_stock'
+    # elif stock == 'readyForSale':
+    #     return render_template('genMessage.html')
+    connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
     try:
-        stock = request.form['stock']
-        mpn = request.form['mpn']
-        addQuantity = int(request.form['quantity'])
-        if stock == 'main':
-            database = 'main_stock'
-        elif stock == 'production':
-            database = 'production_stock'
-        elif stock == 'prototyping':
-            database = 'prototyping_stock'
-        # elif stock == 'readyForSale':
-        #     return render_template('genMessage.html')
-        connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
-
          # make db connection
         with pyodbc.connect(connString) as conn:
             with conn.cursor() as cursor:
@@ -447,18 +440,17 @@ def addToStock():
 
 @app.route('/withdraw_from_stock', methods = ['POST'])
 def withdrawFromStock():
+    stock = request.form['stock']
+    mpn = request.form['mpn']
+    withdrawQuantity = int(request.form['quantity'])
+    if stock == 'main':
+        database = 'main_stock'
+    elif stock == 'production':
+        database = 'production_stock'
+    elif stock == 'prototyping':
+        database = 'prototyping_stock'
+    connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
     try:
-        stock = request.form['stock']
-        mpn = request.form['mpn']
-        withdrawQuantity = int(request.form['quantity'])
-        if stock == 'main':
-            database = 'main_stock'
-        elif stock == 'production':
-            database = 'production_stock'
-        elif stock == 'prototyping':
-            database = 'prototyping_stock'
-        connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
-
          # make db connection
         with pyodbc.connect(connString) as conn:
             with conn.cursor() as cursor:
@@ -498,9 +490,19 @@ def withdrawFromStock():
     except:
         return redirect(url_for('genMessage', message = 'Couldn\'t connect to the database!'))
 
+@app.route('/withdraw_by_file', methods = ['POST'])
+def withdrawByFile():
+    stock = request.form['stock']
+    quantity = request.form['quantity']
+    print(stock)
+    print(quantity)
+    sheet = getExcelWbSheetFilename()[1]
+
+
+    return render_template("Responses/underDev.html")
+
 @app.route('/update_bom_file', methods = ['POST'])
 def updateBOM():
-    setdb()
     wb, sheet, filename = getExcelWbSheetFilename()
     mpns = []
     for row in range(2, sheet.max_row + 1):
