@@ -11,7 +11,7 @@ headers = {
     "Authorization": f"Bearer {getBearerToken()}",
 }
 
-mpn = f'RC0402FR-070RL'
+mpn = f'311-0.0LRTR-ND'
 r = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = headers)
 try:
     for i in range(len(r.json()["Parameters"])):

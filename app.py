@@ -1,11 +1,9 @@
-from email import message
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import pyodbc
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
 from copy import copy
-import json
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -235,7 +233,7 @@ def calcReelQty(columns, components):
                         else:
                             component[index] = round(component[index - 1] / component[index], 2)
                     else:
-                        component[index] = 'Not available'
+                        component[index] = '-'
 
 def getComponentLengths(components):
     componentLengths = []
