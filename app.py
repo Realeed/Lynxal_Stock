@@ -1,5 +1,5 @@
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
-import pyodbc
+import mysql.connector
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
@@ -22,12 +22,10 @@ users.append(User(id=1, username='lynxal_team', password='lynxal2020'))
 
 # DB connection params
 
-server = 'stockretrievaldb.database.windows.net'
+host = 'localhost'
+user = 'root'
+password = 'somegoodpassword'   
 db = ''
-username = 'hakob'
-password = '{SomeGoodPassword007}'   
-driver= '{ODBC Driver 17 for SQL Server}'
-connString = ''
 
 def getStocks():
     stock = request.form['stock']
@@ -40,16 +38,14 @@ def getStocks():
         stocks.append('Prototyping')
     return stocks
  
-def dbConnect(connString):
-    global cursor
+def dbConnect():
     try:
-        conn = pyodbc.connect(connString)
-        cursor = conn.cursor()
-        return cursor
+        conn = mysql.connector.connect(host = host, user = user, password = password)
+        return conn
     except Exception as e:
         redirect(url_for('genMessage', message = str(e)))
 
-def getTables():
+def getTables(cursor):
     stock = request.form['stock']
     if stock == 'main':
         db = 'main_stock'        
@@ -57,12 +53,10 @@ def getTables():
         db = 'production_stock'       
     elif stock == 'prototyping':
         db = 'prototyping_stock'
-    connString = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+db+';UID='+username+';PWD='+ password
-    cursor = dbConnect(connString)
-    getTablesCommand = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \'dbo\''
+    cursor.execute(f'USE {db}')
+    getTablesCommand = 'SHOW TABLES'
     cursor.execute(getTablesCommand)
     tables = cursor.fetchall()
-    db = ''
     return tables
 
 def searchInAllTables(mpn):
@@ -86,7 +80,9 @@ def searchInAllTables(mpn):
                     ctNames.append(columnReplace[key])
         else:
             ctNames.append(colName)
-    tables = getTables()
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber LIKE \'%{mpn}%\''
         cursor.execute(query)
@@ -130,6 +126,8 @@ def searchExactMatchInAllTables(mpn):
     tables = getTables()
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        conn = dbConnect()
+        cursor = conn.cursor()
         cursor.execute(query)
         components = cursor.fetchall()
         if components:
@@ -151,6 +149,8 @@ def getQuantity(mpn):
     tables = getTables()
     for table in tables:
         query = f'SELECT Quantity FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        conn = dbConnect()
+        cursor = conn.cursor()
         cursor.execute(query)
         quantity = cursor.fetchall()
         if quantity:
@@ -166,6 +166,8 @@ def withdraw(mpn, qty):
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        conn = dbConnect()
+        cursor = conn.cursor()
         cursor.execute(findmpn)
         components = cursor.fetchall()
         if components:
@@ -199,6 +201,8 @@ def add(mpn, qty):
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        conn = dbConnect()
+        cursor = conn.cursor()
         cursor.execute(findmpn)
         components = cursor.fetchall()
         if components:
@@ -399,7 +403,7 @@ def searchByMpn():
         pass
     else:
         tables, columns, components = searchInAllTables(mpn)
-        calcReelQty(columns, components)
+        # calcReelQty(columns, components)
     
     return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
 
