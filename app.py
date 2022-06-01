@@ -91,7 +91,7 @@ def searchInAllTables(mpn):
             appendTables(table[0])
             ctNames = []
             compt = []
-            getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+            getColumnNames = f'DESCRIBE {table[0]}'
             cursor.execute(getColumnNames)
             colNames = cursor.fetchall()
             for colName in colNames:
@@ -231,13 +231,14 @@ def calcReelQty(columns, components):
         for index, columnName in enumerate(columns[i]):
             if columnName == 'Reel Quantity':
                 for component in components[i]:
-                    if not (component[index - 1] == 0 or component[index] == 0):
-                        if component[index - 1] % component[index] == 0:
-                            component[index] = component[index - 1] // component[index]
+                    if component[index] != None:
+                        if not (component[index - 1] == 0 or component[index] == 0):
+                            if component[index - 1] % component[index] == 0:
+                                component[index] = component[index - 1] // component[index]
+                            else:
+                                component[index] = round(component[index - 1] / component[index], 2)
                         else:
-                            component[index] = round(component[index - 1] / component[index], 2)
-                    else:
-                        component[index] = '-'
+                            component[index] = '-'
 
 def getComponentLengths(components):
     componentLengths = []
@@ -403,8 +404,7 @@ def searchByMpn():
         pass
     else:
         tables, columns, components = searchInAllTables(mpn)
-        # calcReelQty(columns, components)
-    
+        calcReelQty(columns, components)
     return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
 
 @app.route('/search_by_values', methods = ['POST'])

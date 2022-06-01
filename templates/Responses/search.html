@@ -60,10 +60,10 @@
             <tr>
                 <td class="responsetd">{{stocks[0]}}</td>
                 {% for param in component %}
-                {% if param != None %}
+                {% if param != None or param == '' %}
                 <td class="responsetd">{{param}}</td>
                 {% else %}
-                <td class="responsetd"></td>
+                <td class="responsetd">-</td>
                 {% endif %}
                 {% endfor %}
             </tr>            
