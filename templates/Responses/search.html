@@ -73,7 +73,7 @@
         {% endfor %}
         {% endif %}
         <script>
-            componentLengths = Array.from(JSON.parse('{{componentLengths}}'))
+            componentLengths = Array.from(JSON.parse('{{componentLengths}}'))    
             for (i = 0; i < componentLengths.length; i++) {
                 for (row = 2; row < componentLengths[i] + 2; row++) {
                     if (document.getElementsByClassName('responseTab')[i].rows[row].cells[3].innerHTML != '{{mpn}}') {
