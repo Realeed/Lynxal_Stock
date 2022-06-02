@@ -3,7 +3,10 @@ import mysql.connector
 from dict import columnReplace
 from dict import tableReplace
 from openpyxl import load_workbook
+from openpyxl.styles import Alignment, Font
 from copy import copy
+from bearer import getBearerToken
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -27,6 +30,12 @@ user = 'root'
 password = 'somegoodpassword'   
 db = ''
 
+font = Font(name='Calibri', size=11,)
+
+alignment=Alignment(horizontal='center', vertical='center',)
+
+number_format = 'General'
+
 def getStocks():
     stock = request.form['stock']
     stocks = []
@@ -37,7 +46,19 @@ def getStocks():
     elif stock == 'prototyping':
         stocks.append('Prototyping')
     return stocks
- 
+
+def convertStockName(stock):
+    if stock == 'main':
+        return 'Main'
+    elif stock == 'production':
+        return 'Production'
+    elif stock == 'prototyping':
+        return 'Prototyping'
+    elif stock == 'all':
+        return 'All'
+    else:
+        return -1
+
 def dbConnect():
     try:
         conn = mysql.connector.connect(host = host, user = user, password = password)
@@ -128,8 +149,6 @@ def searchExactMatchInAllTables(mpn):
     tables = getTables(cursor)
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        conn = dbConnect()
-        cursor = conn.cursor()
         cursor.execute(query)
         components = cursor.fetchall()
         if components:
@@ -153,8 +172,6 @@ def getQuantity(mpn):
     tables = getTables(cursor)
     for table in tables:
         query = f'SELECT Quantity FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        conn = dbConnect()
-        cursor = conn.cursor()
         cursor.execute(query)
         quantity = cursor.fetchall()
         if quantity:
@@ -172,8 +189,6 @@ def withdraw(mpn, qty):
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        conn = dbConnect()
-        cursor = conn.cursor()
         cursor.execute(findmpn)
         components = cursor.fetchall()
         if components:
@@ -209,8 +224,6 @@ def add(mpn, qty):
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        conn = dbConnect()
-        cursor = conn.cursor()
         cursor.execute(findmpn)
         components = cursor.fetchall()
         if components:
@@ -260,14 +273,15 @@ def getNumberOfColumns(columnNames):
         numberOfColumns.append(len(columnNames[i]))
     return numberOfColumns
 
-def getExcelWbSheetFilename():
+def getExcelWbSheetsFilename():
     excel = request.files['excel']
     filename = excel.filename
-    # path = 'resources\\'
     excel.save(filename)
-    wb = load_workbook(filename)
-    sheet = wb.active
-    return wb, sheet, filename
+    wb = load_workbook(filename, data_only=True)
+    sheets = []
+    for i in range (len(wb.worksheets)):
+        sheets.append(wb.worksheets[i])
+    return wb, sheets, filename
 
 def getExcelColumn(sheet, columnName):
     for col in range(sheet.max_column):
@@ -331,7 +345,7 @@ def chooseStock():
     if request.method == 'POST':
         stock = request.form['stock']
         if stock == 'all':
-            return redirect(url_for('underDev'))
+            return redirect(url_for('getInfo', action = request.form['action'], stock = stock))
         if stock == 'main' or stock == 'production' or stock == 'prototyping' or stock == 'ready_for_sale':
             return redirect(url_for('getInfo', action = request.form['action'], stock = stock))
     if request.args['action']:
@@ -354,6 +368,7 @@ def getInfo():
     if not g.user:
         return redirect(url_for('signIn'))
     action = request.args.get('action')
+    stock = convertStockName(request.args.get('stock'))
     if action == 'search':
         return render_template('Queries/search.html')
     elif action == 'withdraw':
@@ -361,7 +376,7 @@ def getInfo():
     elif action == 'add':
         return render_template('Queries/add.html')
     elif action == 'updateBOM':
-        return render_template('Queries/updateBOM.html')
+        return render_template('Queries/updateBOM.html', action = action, stock = stock)
 
 @app.route('/search_by_mpn', methods = ['POST'])
 def searchByMpn():
@@ -413,6 +428,7 @@ def searchByMpn():
     else:
         tables, columns, components = searchInAllTables(mpn)
         calcReelQty(columns, components)
+    
     return render_template('Responses/search.html', stock = stock, mpn = mpn, stocks = stocks, tables = tables, columns = columns, numberOfColumns = getNumberOfColumns(columns), components = components, componentLengths = getComponentLengths(components))
 
 @app.route('/search_by_values', methods = ['POST'])
@@ -423,16 +439,18 @@ def searchByValues():
 def searchByFile():
     stock = request.form['stock']
     stocks = getStocks()
-    sheet = getExcelWbSheetFilename()[1]
+    sheets = getExcelWbSheetsFilename()[1]
+    if 'Total_BOM' in sheets[0].title:
+        sheets = sheets[slice(1, len(sheets), 1)]
     mpns = []
-    if getExcelColumn(sheet, 'Comment') != None:
-        for row in range(2, sheet.max_row + 1):
-            if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
-                mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
+    for sheet in sheets:
+        if getExcelColumn(sheet, 'Comment') != None:
+            for row in range(2, sheet.max_row + 1):
+                if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+                    mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
     tables = []
     columns = []
     components = []
-    print(mpns)
     for i in range (len(mpns)):
         tableNames, columnNames, comps = searchInAllTables(mpns[i])
         for tableName in tableNames:
@@ -477,7 +495,7 @@ def withdrawFromStock():
 @app.route('/withdraw_by_file', methods = ['POST'])
 def withdrawByFile():
     PCBquantity = int(request.form['quantity'])
-    sheet = getExcelWbSheetFilename()[1]
+    sheet = getExcelWbSheetsFilename()[1][0]
     mpns = []
     qtys = []
     msgs = []
@@ -504,27 +522,117 @@ def withdrawByFile():
 
     return render_template('Responses/genMessage.html', message = 'Stock updated successfully!',  messages = messages, notfoundMpns = notfoundMpns)
     
-
 @app.route('/update_bom_file', methods = ['POST'])
 def updateBOM():
-    wb, sheet, filename = getExcelWbSheetFilename()
-    mpns = []
-    for row in range(2, sheet.max_row + 1):
-        if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
-            mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
-    quantities = []
-    for mpn in mpns:
-        quantities.append(getQuantity(mpn))
-    for index, quantity in enumerate(quantities):
-        if quantity == None:
-            quantities[index] = 0
+    wb, sheets, filename = getExcelWbSheetsFilename()
+    if 'Total_BOM' in sheets[0].title:
+        sheets = sheets[slice(1, len(sheets), 1)]
 
-    sheet.cell(1, sheet.max_column + 1)._style = copy(sheet.cell(1, sheet.max_column)._style)
-    sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
-    sheet.cell(1, sheet.max_column).value = 'Lynxal Stock'
-    for row in range (2, sheet.max_row + 1):
-        sheet[row][sheet.max_column - 1]._style = copy(sheet[row][sheet.max_column - 2]._style)
-        sheet[row][sheet.max_column - 1].value = quantities[row - 2]
+    digi_headers = {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "User-Agent": "python-requests/2.4.3 CPython/3.4.0",
+    "X-DIGIKEY-Client-Id": "mEszZA7lW3tiCtvB8UAS4SlC8eDoGWPv",
+    "Authorization": f"Bearer {getBearerToken()}",
+    }
+
+    mous_json = {
+        "SearchByKeywordRequest": {
+            "keyword": ""
+        }
+    }
+
+    mpn = ''
+
+    mpns = []
+    Lynxqtys = []
+    Digiqtys = []
+    Mousqtys = []
+
+    for sheet in sheets:
+        if not getExcelColumn(sheet, 'Digikey Stock'):
+            sheet.cell(1, sheet.max_column + 1).value = 'Lynxal Stock'
+            sheet.cell(1, sheet.max_column + 1).value = 'Digikey Stock'
+            sheet.cell(1, sheet.max_column + 1).value = 'Mouser Stock'
+            sheet[1][sheet.max_column - 3]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            sheet[1][sheet.max_column - 2]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            sheet[1][sheet.max_column - 1]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            sheet.column_dimensions[sheet[1][sheet.max_column - 3].coordinate[0]].bestFit = True
+            sheet.column_dimensions[sheet[1][sheet.max_column - 2].coordinate[0]].bestFit = True
+            sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
+
+        for row in range (2, sheet.max_row + 1):
+            sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].font = font
+            sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].alignment = alignment
+            sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].number_format = number_format
+
+            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].font = font
+            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].alignment = alignment
+            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].number_format = number_format
+
+            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].font = font
+            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].alignment = alignment
+            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].number_format = number_format
+
+            if not sheet[row][getExcelColumn(sheet, 'Comment')].value:
+                continue
+            
+            mpn = sheet[row][getExcelColumn(sheet, 'Comment')].value
+            requiredQty = sheet[row][getExcelColumn(sheet, 'Required Quantity')].value
+
+            if mpn in mpns:
+                index = mpns.index(mpn)
+                if Lynxqtys[index] >= 1.1 * requiredQty:
+                    sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqtys[index]
+                else:
+                    sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqtys[index]
+                    sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = Digiqtys[index]
+                    sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = Mousqtys[index]
+            else:
+                mpns.append(mpn)
+                Lynxqty = getQuantity(mpn)
+                if not Lynxqty:
+                    Lynxqty = 0
+                Lynxqtys.append(Lynxqty)
+                sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqty
+                if Lynxqty < 1.1 * requiredQty:
+                    r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = digi_headers).json()
+                    mous_json['SearchByKeywordRequest']['keyword'] = mpn
+                    r_mous = requests.post('https://api.mouser.com/api/v1/search/keyword?apiKey=0e7aaee3-b68a-4638-938b-c810074dc0d7', json = mous_json).json()
+                    try:
+                        if r_digi['ManufacturerPartNumber'] == mpn:
+                            Digiqtys.append(r_digi['QuantityAvailable'])
+                            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = r_digi['QuantityAvailable']
+                        else:
+                            Digiqtys.append(0)
+                            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = 0
+                    except:
+                        Digiqtys.append(0)
+                        sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = 0
+                    try:
+                        found = False
+                        for i in range(len(r_mous['SearchResults']['Parts'])):
+                            if r_mous['SearchResults']['Parts'][i]['ManufacturerPartNumber'] != mpn:
+                                continue
+                            found = True
+                            if r_mous['SearchResults']['Parts'][i]['Availability'] == 'None' or 'On Order' in r_mous['SearchResults']['Parts'][i]['Availability']:
+                                Mousqtys.append(0)
+                                sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = 0
+                            else:
+                                Mousqtys.append(r_mous['SearchResults']['Parts'][i]['Availability'].replace(' In Stock', ''))
+                                sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = r_mous['SearchResults']['Parts'][i]['Availability'].replace(' In Stock', '')
+                            break
+                        if not found:
+                            Mousqtys.append(0)
+                            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = 0 
+                    except:
+                        Mousqtys.append(0)
+                        sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = 0
+                else:
+                    Digiqtys.append('')
+                    Mousqtys.append('')
 
     path = '(Updated) ' + filename
     wb.save(path)
