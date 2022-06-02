@@ -123,7 +123,9 @@ def searchExactMatchInAllTables(mpn):
                     ctNames.append(columnReplace[key])
         else:
             ctNames.append(colName)
-    tables = getTables()
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
     for table in tables:
         query = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
         conn = dbConnect()
@@ -134,7 +136,7 @@ def searchExactMatchInAllTables(mpn):
             appendTables(table[0])
             ctNames = []
             compt = []
-            getColumnNames = f'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \'{table[0]}\''
+            getColumnNames = f'DESCRIBE {table[0]}'
             cursor.execute(getColumnNames)
             colNames = cursor.fetchall()
             for colName in colNames:
@@ -146,7 +148,9 @@ def searchExactMatchInAllTables(mpn):
     return tableNames, columnNames, componentArray
 
 def getQuantity(mpn):
-    tables = getTables()
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
     for table in tables:
         query = f'SELECT Quantity FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
         conn = dbConnect()
@@ -162,7 +166,9 @@ def getQuantity(mpn):
             return quantity[0][0]
 
 def withdraw(mpn, qty):
-    tables = getTables()
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
@@ -197,7 +203,9 @@ def withdraw(mpn, qty):
         return 'Couldn\'t find the component!'
 
 def add(mpn, qty):
-    tables = getTables()
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
     found = False
     for table in tables:
         findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
@@ -424,6 +432,7 @@ def searchByFile():
     tables = []
     columns = []
     components = []
+    print(mpns)
     for i in range (len(mpns)):
         tableNames, columnNames, comps = searchInAllTables(mpns[i])
         for tableName in tableNames:
