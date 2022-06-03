@@ -50,7 +50,7 @@ digiToDbTableNameReplace = {
     'MOSFETs': 'mosfets',
     'Schottky Diodes': 'schottky_diodes',
     'Slide Switches': 'slide_switches',
-    'SoCs': 'socs',
+    'Embedded - Microcontrollers': 'socs',
     'Spring Connectors': 'spring_connectors',
     'TVS Diodes': 'tvs_diodes',
     'Wire to Board Connectors': 'wire_to_board_connectors',

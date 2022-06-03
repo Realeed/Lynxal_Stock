@@ -253,7 +253,10 @@ def add(mpn, qty):
                                 return 'Stock updated successfully!'
                             else:
                                 return 'Something went wrong while updating the database!'
-            return 'Couldn\'t find the component type, please select it manually'
+                else:
+                    return 'App cannot understand the component type found, please select it manually'
+            else:
+                return 'Couldn\'t find the component type, please select it manually'
         except:
             return 'Couldn\'t find the component type, please select it manually'
 
