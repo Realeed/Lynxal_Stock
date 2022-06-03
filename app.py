@@ -137,7 +137,7 @@ def searchInAllTables(mpn):
                 appendColumns(colName[0])
             columnNames.append(ctNames)
             for component in components:
-                compt.append(component)
+                compt.append(list(component))
             componentArray.append(compt)
     return tableNames, columnNames, componentArray
 
@@ -300,7 +300,10 @@ def calcReelQty(columns, components):
                             if component[index - 1] % component[index] == 0:
                                 component[index] = component[index - 1] // component[index]
                             else:
-                                component[index] = round(component[index - 1] / component[index], 2)
+                                if round(component[index - 1] / component[index], 2) * 10 % 10 == 0:
+                                    component[index] = int(round(component[index - 1] / component[index], 2) * 10 / 10)
+                                else:
+                                    component[index] = round(component[index - 1] / component[index], 2)
                         else:
                             component[index] = '-'
     
