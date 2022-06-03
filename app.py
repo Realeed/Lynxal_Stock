@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment, Font
 from copy import copy
 from bearer import getBearerToken
 import requests
-from datetime import date
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -244,7 +244,7 @@ def add(mpn, qty):
                 if componentType in digiToDbTableNameReplace:
                     for key in digiToDbTableNameReplace:
                         if key == componentType:
-                            insertInto = f"INSERT INTO {digiToDbTableNameReplace[key]} (ManufacturerPartNumber, Quantity, StandardPackQty, LastUpdated) VALUES ('{mpn}', {qty}, {r_digi['StandardPackage']}, '{date.today()}')"
+                            insertInto = f"INSERT INTO {digiToDbTableNameReplace[key]} (ManufacturerPartNumber, Quantity, StandardPackQty, LastUpdated) VALUES ('{mpn}', {qty}, {r_digi['StandardPackage']}, '{datetime.today().strftime('%d/%m/%Y')}')"
                             cursor.execute(insertInto)
                             conn.commit()
                             Id = getId(cursor, digiToDbTableNameReplace[key], mpn)
@@ -303,6 +303,7 @@ def calcReelQty(columns, components):
                                 component[index] = round(component[index - 1] / component[index], 2)
                         else:
                             component[index] = '-'
+    
 
 def getComponentLengths(components):
     componentLengths = []
