@@ -546,7 +546,7 @@ def withdrawByFile():
     mpns = []
     qtys = []
     msgs = []
-    if getExcelColumn(sheet, "Comment") != None:
+    if getExcelColumn(sheet, "Comment"):
         for row in range(2, sheet.max_row + 1):
             if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
                 mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
@@ -628,7 +628,7 @@ def updateBOM():
                     Lynxqty = 0
                 Lynxqtys.append(Lynxqty)
                 sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqty
-                if Lynxqty < 1.1 * requiredQty:
+                def updateByDigiMous():
                     r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = digi_headers).json()
                     mous_json['SearchByKeywordRequest']['keyword'] = mpn
                     r_mous = requests.post('https://api.mouser.com/api/v1/search/keyword?apiKey=0e7aaee3-b68a-4638-938b-c810074dc0d7', json = mous_json).json()
@@ -661,9 +661,14 @@ def updateBOM():
                     except:
                         Mousqtys.append(0)
                         sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = 0
+                if requiredQty:
+                    if Lynxqty < 1.1 * requiredQty:
+                        updateByDigiMous()
+                    else:
+                        Digiqtys.append('')
+                        Mousqtys.append('')
                 else:
-                    Digiqtys.append('')
-                    Mousqtys.append('')
+                    updateByDigiMous()
 
     path = '(Updated) ' + filename
     wb.save(path)
