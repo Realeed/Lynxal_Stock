@@ -1,12 +1,14 @@
 from flask import Flask, redirect, send_file, url_for, render_template, request, g, session
 import mysql.connector
-from dict import columnReplace
-from dict import tableReplace
+from dict import dbToUITableNameReplace
+from dict import dbToUIColumnNameReplace
+from dict import digiToDbTableNameReplace
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font
 from copy import copy
 from bearer import getBearerToken
 import requests
+from datetime import date
 
 app = Flask(__name__)
 app.secret_key = 'mybiggestsecret'
@@ -35,6 +37,22 @@ font = Font(name='Calibri', size=11,)
 alignment=Alignment(horizontal='center', vertical='center',)
 
 number_format = 'General'
+
+digi_headers = {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "User-Agent": "python-requests/2.4.3 CPython/3.4.0",
+    "X-DIGIKEY-Client-Id": "mEszZA7lW3tiCtvB8UAS4SlC8eDoGWPv",
+    "Authorization": f"Bearer {getBearerToken()}",
+}
+
+mous_json = {
+    "SearchByKeywordRequest": {
+        "keyword": ""
+    }
+}
 
 def getStocks():
     stock = request.form['stock']
@@ -85,20 +103,20 @@ def searchInAllTables(mpn):
     columnNames = []
     componentArray = []
     def appendTables(tableName):
-        if tableName in tableReplace:
-            for key in tableReplace:
+        if tableName in dbToUITableNameReplace:
+            for key in dbToUITableNameReplace:
                 if tableName == key:
-                    tableNames.append(tableReplace[key])
+                    tableNames.append(dbToUITableNameReplace[key])
         else:
             tableNames.append(tableName.capitalize())
     def appendColumns(colName):
         if colName == 'StandardPackQty':
             ctNames.append('Reel Quantity')
             return
-        if colName in columnReplace:
-            for key in columnReplace:
+        if colName in dbToUIColumnNameReplace:
+            for key in dbToUIColumnNameReplace:
                 if colName == key:
-                    ctNames.append(columnReplace[key])
+                    ctNames.append(dbToUIColumnNameReplace[key])
         else:
             ctNames.append(colName)
     conn = dbConnect()
@@ -128,20 +146,20 @@ def searchExactMatchInAllTables(mpn):
     columnNames = []
     componentArray = []
     def appendTables(tableName):
-        if tableName in tableReplace:
-            for key in tableReplace:
+        if tableName in dbToUITableNameReplace:
+            for key in dbToUITableNameReplace:
                 if tableName == key:
-                    tableNames.append(tableReplace[key])
+                    tableNames.append(dbToUITableNameReplace[key])
         else:
             tableNames.append(tableName.capitalize())
     def appendColumns(colName):
         if colName == 'StandardPackQty':
             ctNames.append('Reel Quantity')
             return
-        if colName in columnReplace:
-            for key in columnReplace:
+        if colName in dbToUIColumnNameReplace:
+            for key in dbToUIColumnNameReplace:
                 if colName == key:
-                    ctNames.append(columnReplace[key])
+                    ctNames.append(dbToUIColumnNameReplace[key])
         else:
             ctNames.append(colName)
     conn = dbConnect()
@@ -182,40 +200,21 @@ def getQuantity(mpn):
                 return qty
             return quantity[0][0]
 
-def withdraw(mpn, qty):
-    conn = dbConnect()
-    cursor = conn.cursor()
-    tables = getTables(cursor)
-    found = False
-    for table in tables:
-        findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-        cursor.execute(findmpn)
-        components = cursor.fetchall()
-        if components:
-            found = True
-            getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-            cursor.execute(getId)
-            Ids = cursor.fetchall()
-            Id = Ids[0][0]
-            getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
-            cursor.execute(getQuantity)
-            stockQuantities = cursor.fetchall()
-            stockQuantity = stockQuantities[0][0]
-            if stockQuantity >= qty:
-                update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
-                cursor.execute(update)
-                cursor.commit()
-                cursor.execute(getQuantity)
-                newStockQuantities = cursor.fetchall()
-                newStockQuantity = newStockQuantities[0][0]
-                if newStockQuantity == stockQuantity - qty: 
-                    return 'Stock updated successfully!'
-                else:
-                    return 'Something went wrong while updating the database!'
-            else:
-                return 'Not enough to withdraw!'
-    if not found:
-        return 'Couldn\'t find the component!'
+def getId(cursor, table, mpn):
+    getId = f'SELECT ID FROM {table} WHERE ManufacturerPartNumber = \'{mpn}\''
+    cursor.execute(getId)
+    Ids = cursor.fetchall()
+    return Ids[0][0]
+
+def getQuantityById(cursor, table, Id):
+    getQuantity = f'SELECT Quantity FROM {table} WHERE ID = {Id}'
+    cursor.execute(getQuantity)
+    stockQuantities = cursor.fetchall()
+    return stockQuantities[0][0]
+
+def addById(cursor, table, Id, stockQuantity, qty):
+    update = f'UPDATE {table} SET Quantity = ({stockQuantity} + {qty}) WHERE ID = {Id}'
+    cursor.execute(update)
 
 def add(mpn, qty):
     conn = dbConnect()
@@ -228,24 +227,65 @@ def add(mpn, qty):
         components = cursor.fetchall()
         if components:
             found = True
-            getId = f'SELECT ID FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
-            cursor.execute(getId)
-            Ids = cursor.fetchall()
-            Id = Ids[0][0]
-            getQuantity = f'SELECT Quantity FROM {table[0]} WHERE ID = {Id}'
-            cursor.execute(getQuantity)
-            stockQuantities = cursor.fetchall()
-            stockQuantity = stockQuantities[0][0]
-            update = f'UPDATE {table[0]} SET Quantity = ({stockQuantity} + {qty}) WHERE ID = {Id}'
-            cursor.execute(update)
-            cursor.commit()
-            cursor.execute(getQuantity)
-            newStockQuantities = cursor.fetchall()
-            newStockQuantity = newStockQuantities[0][0]
+            Id = getId(cursor, table[0], mpn)
+            stockQuantity = getQuantityById(cursor, table[0], Id)
+            addById(cursor, table[0], Id, stockQuantity, qty)
+            conn.commit()
+            newStockQuantity = getQuantityById(cursor, table[0], Id)
             if newStockQuantity == stockQuantity + qty: 
                 return 'Stock updated successfully!'
             else:
                 return 'Something went wrong while updating the database!'
+    if not found:
+        r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = digi_headers).json()
+        try:
+            if r_digi['ManufacturerPartNumber'] == mpn:
+                componentType = r_digi['Family']['Value']
+                if componentType in digiToDbTableNameReplace:
+                    for key in digiToDbTableNameReplace:
+                        if key == componentType:
+                            insertInto = f"INSERT INTO {digiToDbTableNameReplace[key]} (ManufacturerPartNumber, Quantity, StandardPackQty, LastUpdated) VALUES ('{mpn}', {qty}, {r_digi['StandardPackage']}, '{date.today()}')"
+                            cursor.execute(insertInto)
+                            conn.commit()
+                            Id = getId(cursor, digiToDbTableNameReplace[key], mpn)
+                            stockQuantity = getQuantityById(cursor, digiToDbTableNameReplace[key], Id)
+                            if stockQuantity == qty:
+                                return 'Stock updated successfully!'
+                            else:
+                                return 'Something went wrong while updating the database!'
+            return 'Couldn\'t find the component type, please select it manually'
+        except:
+            return 'Couldn\'t find the component type, please select it manually'
+
+def withdrawById(cursor, table, Id, stockQuantity, qty):
+    update = f'UPDATE {table} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
+    cursor.execute(update)
+
+def withdraw(mpn, qty):
+    conn = dbConnect()
+    cursor = conn.cursor()
+    tables = getTables(cursor)
+    found = False
+    for table in tables:
+        findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+        cursor.execute(findmpn)
+        components = cursor.fetchall()
+        if components:
+            found = True
+            Id = getId(cursor, table[0], mpn)
+            stockQuantity = getQuantityById(cursor, table[0], Id)
+            if stockQuantity >= qty:
+                withdrawById(cursor, table[0], Id, stockQuantity, qty)
+                conn.commit()
+                newStockQuantity = getQuantityById(cursor, table[0], Id)
+                if newStockQuantity == stockQuantity - qty: 
+                    return 'Stock updated successfully!'
+                else:
+                    return 'Something went wrong while updating the database!'
+            else:
+                return 'Not enough to withdraw!'
+    if not found:
+        return 'Couldn\'t find the component!'
 
 def calcReelQty(columns, components):
     for i in range(len(columns)):
@@ -527,22 +567,6 @@ def updateBOM():
     wb, sheets, filename = getExcelWbSheetsFilename()
     if 'Total_BOM' in sheets[0].title:
         sheets = sheets[slice(1, len(sheets), 1)]
-
-    digi_headers = {
-    "Accept": "*/*",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Content-Type": "application/json",
-    "User-Agent": "python-requests/2.4.3 CPython/3.4.0",
-    "X-DIGIKEY-Client-Id": "mEszZA7lW3tiCtvB8UAS4SlC8eDoGWPv",
-    "Authorization": f"Bearer {getBearerToken()}",
-    }
-
-    mous_json = {
-        "SearchByKeywordRequest": {
-            "keyword": ""
-        }
-    }
 
     mpn = ''
 

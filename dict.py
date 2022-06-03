@@ -1,4 +1,4 @@
-tableReplace = {
+dbToUITableNameReplace = {
     'aluminum_electrolytic_capacitors': 'Aluminum Electrolytic Capacitors',
     'bjts': 'BJTs',
     'ceramic_capacitors': 'Ceramic Capacitors',
@@ -24,10 +24,35 @@ tableReplace = {
 
 }
 
-columnReplace = {
+dbToUIColumnNameReplace = {
     'ID': 'Id',
     'BoxName': 'Box Name',
     'ManufacturerPartNumber': 'Manufacturer Part Number',
     'LastUpdated': 'Last Updated',
     'TemperatureCoefficient': 'Temperature Coefficient',
+}
+
+digiToDbTableNameReplace = {
+    'Aluminum Electrolytic Capacitors': 'aluminum_electrolytic_capacitors',
+    'Transistors - Bipolar (BJT) - Single': 'bjts',
+    'Ceramic Capacitors': 'ceramic_capacitors',
+    'Chip Resistor - Surface Mount': 'chip_resistors',
+    'Linear - Comparators': 'comparators',
+    'Data Acquisition - Digital to Analog Converters (DAC)': 'dacs',
+    'Encoders': 'encoders',
+    'Ferrite Beads': 'ferrite_beads',
+    'FFC_FPC Connectors': 'ffc_fpc_connectors',
+    'Header Connectors': 'header_connectors',
+    'Inductors': 'inductors',
+    'LED Drivers': 'led_drivers',
+    'LEDs': 'leds',
+    'Linear Voltage Regulators': 'linear_voltage_regulators',
+    'MOSFETs': 'mosfets',
+    'Schottky Diodes': 'schottky_diodes',
+    'Slide Switches': 'slide_switches',
+    'SoCs': 'socs',
+    'Spring Connectors': 'spring_connectors',
+    'TVS Diodes': 'tvs_diodes',
+    'Wire to Board Connectors': 'wire_to_board_connectors',
+    'Zener Diodes': 'zener_diodes',
 }
