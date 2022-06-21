@@ -23,16 +23,66 @@
         <p class="headings" style="font-style: italic; margin-top: -20px;">Component Information</p>
         <div id="selectdiv" style="margin-top: 4%;">
             <form action="add_to_stock" method="POST">
+                <select name="componentType" class="select" style="font-size: 22px; height: 42px;">
+                    <option class="options" id="componentType" value="none" hidden>Select the type of component</option>
+                    <option class="options" id="componentType" value="aluminum_electrolytic_capacitors">Aluminum Electrolytic Capacitors</option>
+                    <option class="options" id="componentType" value="bjts">BJTs</option>
+                    <option class="options" id="componentType" value="ceramic_capacitors">Ceramic Capacitors</option>
+                    <option class="options" id="componentType" value="chip_resistors">Chip Resistors</option>
+                    <option class="options" id="componentType" value="comparators">Comparators</option>
+                    <option class="options" id="componentType" value="dacs">DACs</option>
+                    <option class="options" id="componentType" value="encoders">Encoders</option>
+                    <option class="options" id="componentType" value="ferrite_beads">Ferrite Beads</option>
+                    <option class="options" id="componentType" value="ffc_fpc_connectors">FFC_FPC Connectors</option>
+                    <option class="options" id="componentType" value="header_connectors">Header Connectors</option>
+                    <option class="options" id="componentType" value="inductors">Inductors</option>
+                    <option class="options" id="componentType" value="led_drivers">LED Drivers</option>
+                    <option class="options" id="componentType" value="leds">LEDs</option>
+                    <option class="options" id="componentType" value="linear_voltage_regulators">Linear Voltage Regulators</option>
+                    <option class="options" id="componentType" value="mosfets">MOSFETs</option>
+                    <option class="options" id="componentType" value="schottky_diodes">Schottky Diodes</option>
+                    <option class="options" id="componentType" value="slide_switches">Slide Switches</option>
+                    <option class="options" id="componentType" value="socs">SoCs</option>
+                    <option class="options" id="componentType" value="spring_connectors">Spring Connectors</option>
+                    <option class="options" id="componentType" value="tvs_diodes">TVS Diodes</option>
+                    <option class="options" id="componentType" value="wire_to_board_connectors">Wire to Board Connectors</option>
+                    <option class="options" id="componentType" value="zener_diodes">Zener Diodes</option>
+                </select>
                 <p class="infoMethodsP" style="margin-top: 50px;">Type in the Manufacturer Part Number and the Amount to add</p>
                 <input type="text" name="mpn" id="mpnInp" style="margin-top: 20px; width: 430px;" placeholder="Manufacturer Part Number" required autofocus>
                 <input type="number" name="quantity" id="partQuantityInp" placeholder="Quantity" min="1" required>
                 <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Add">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
-            <p class="infoMethodsP" style="margin-top: 100px; margin-left: -250px;">or upload an Excel file</p>
+            <p class="infoMethodsP" style="margin-top: 100px;">or upload an Excel file</p>
             <form action="add_by_file" enctype="multipart/form-data" method="POST">
+                <select name="componentType" class="select" style="font-size: 22px; height: 42px;">
+                    <option class="options" id="componentType" value="none" hidden>Select the type of component</option>
+                    <option class="options" id="componentType" value="aluminum_electrolytic_capacitors">Aluminum Electrolytic Capacitors</option>
+                    <option class="options" id="componentType" value="bjts">BJTs</option>
+                    <option class="options" id="componentType" value="ceramic_capacitors">Ceramic Capacitors</option>
+                    <option class="options" id="componentType" value="chip_resistors">Chip Resistors</option>
+                    <option class="options" id="componentType" value="comparators">Comparators</option>
+                    <option class="options" id="componentType" value="dacs">DACs</option>
+                    <option class="options" id="componentType" value="encoders">Encoders</option>
+                    <option class="options" id="componentType" value="ferrite_beads">Ferrite Beads</option>
+                    <option class="options" id="componentType" value="ffc_fpc_connectors">FFC_FPC Connectors</option>
+                    <option class="options" id="componentType" value="header_connectors">Header Connectors</option>
+                    <option class="options" id="componentType" value="inductors">Inductors</option>
+                    <option class="options" id="componentType" value="led_drivers">LED Drivers</option>
+                    <option class="options" id="componentType" value="leds">LEDs</option>
+                    <option class="options" id="componentType" value="linear_voltage_regulators">Linear Voltage Regulators</option>
+                    <option class="options" id="componentType" value="mosfets">MOSFETs</option>
+                    <option class="options" id="componentType" value="schottky_diodes">Schottky Diodes</option>
+                    <option class="options" id="componentType" value="slide_switches">Slide Switches</option>
+                    <option class="options" id="componentType" value="socs">SoCs</option>
+                    <option class="options" id="componentType" value="spring_connectors">Spring Connectors</option>
+                    <option class="options" id="componentType" value="tvs_diodes">TVS Diodes</option>
+                    <option class="options" id="componentType" value="wire_to_board_connectors">Wire to Board Connectors</option>
+                    <option class="options" id="componentType" value="zener_diodes">Zener Diodes</option>
+                </select> <br>
                 <label for="excel" style="margin-left: -5px;" id="excelLabel">Upload the file: </label>
-                <input type="file" style="width: 280px;" name="excel" id="excelInp">
+                <input type="file" style="width: 280px; margin-top: 30px;" name="excel" id="excelInp">
                 <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Add">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>

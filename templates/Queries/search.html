@@ -18,18 +18,30 @@
             </form>
             <p class="infoMethodsP">or choose the type of component to search by values</p>
             <form action="search_by_values" method="POST">
-                <select name="componentType" class="select" style="font-size: 22px; height: 42px;" onchange="this.form.submit()">
-                    <option class="options" id="componentType" value="selectComponentType" hidden>Select the type of component</option>
-                    <option class="options" id="componentType" value="capacitor">Capacitor</option>
-                    <option class="options" id="componentType" value="crystal">Crystal</option>
-                    <option class="options" id="componentType" value="diodesLeds">Diodes and LEDs</option>
-                    <option class="options" id="componentType" value="electrolyticCapacitor">Electrolytic Capacitor</option>
-                    <option class="options" id="componentType" value="ferrite">Ferrite</option>
-                    <option class="options" id="componentType" value="IC">Integrated Circuit</option>
-                    <option class="options" id="componentType" value="inductor">Inductor</option>
-                    <option class="options" id="componentType" value="resistor">Resistor</option>
-                    <option class="options" id="componentType" value="transistor">Transistor</option>
-                    <option class="options" id="componentType" value="zenerDiodes">Zener Diode</option>
+                <select name="componentType" class="select" style="font-size: 22px; height: 42px;">
+                    <option class="options" id="componentType" value="none" hidden>Select the type of component</option>
+                    <option class="options" id="componentType" value="aluminum_electrolytic_capacitors">Aluminum Electrolytic Capacitors</option>
+                    <option class="options" id="componentType" value="bjts">BJTs</option>
+                    <option class="options" id="componentType" value="ceramic_capacitors">Ceramic Capacitors</option>
+                    <option class="options" id="componentType" value="chip_resistors">Chip Resistors</option>
+                    <option class="options" id="componentType" value="comparators">Comparators</option>
+                    <option class="options" id="componentType" value="dacs">DACs</option>
+                    <option class="options" id="componentType" value="encoders">Encoders</option>
+                    <option class="options" id="componentType" value="ferrite_beads">Ferrite Beads</option>
+                    <option class="options" id="componentType" value="ffc_fpc_connectors">FFC_FPC Connectors</option>
+                    <option class="options" id="componentType" value="header_connectors">Header Connectors</option>
+                    <option class="options" id="componentType" value="inductors">Inductors</option>
+                    <option class="options" id="componentType" value="led_drivers">LED Drivers</option>
+                    <option class="options" id="componentType" value="leds">LEDs</option>
+                    <option class="options" id="componentType" value="linear_voltage_regulators">Linear Voltage Regulators</option>
+                    <option class="options" id="componentType" value="mosfets">MOSFETs</option>
+                    <option class="options" id="componentType" value="schottky_diodes">Schottky Diodes</option>
+                    <option class="options" id="componentType" value="slide_switches">Slide Switches</option>
+                    <option class="options" id="componentType" value="socs">SoCs</option>
+                    <option class="options" id="componentType" value="spring_connectors">Spring Connectors</option>
+                    <option class="options" id="componentType" value="tvs_diodes">TVS Diodes</option>
+                    <option class="options" id="componentType" value="wire_to_board_connectors">Wire to Board Connectors</option>
+                    <option class="options" id="componentType" value="zener_diodes">Zener Diodes</option>
                 </select>
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>

@@ -77,6 +77,16 @@ def convertStockName(stock):
     else:
         return -1
 
+def getStock():
+    stock = request.form['stock']
+    if stock == 'main':
+        db = 'main_stock'        
+    elif stock == 'production':
+        db = 'production_stock'       
+    elif stock == 'prototyping':
+        db = 'prototyping_stock'
+    return db
+
 def dbConnect():
     try:
         conn = mysql.connector.connect(host = host, user = user, password = password)
@@ -85,14 +95,7 @@ def dbConnect():
         redirect(url_for('genMessage', message = str(e)))
 
 def getTables(cursor):
-    stock = request.form['stock']
-    if stock == 'main':
-        db = 'main_stock'        
-    elif stock == 'production':
-        db = 'production_stock'       
-    elif stock == 'prototyping':
-        db = 'prototyping_stock'
-    cursor.execute(f'USE {db}')
+    cursor.execute(f'USE {getStock()}')
     getTablesCommand = 'SHOW TABLES'
     cursor.execute(getTablesCommand)
     tables = cursor.fetchall()
@@ -219,46 +222,80 @@ def addById(cursor, table, Id, stockQuantity, qty):
 def add(mpn, qty):
     conn = dbConnect()
     cursor = conn.cursor()
-    tables = getTables(cursor)
+    componentType = request.form['componentType']
     found = False
-    for table in tables:
-        findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+    if componentType != 'none':
+        cursor.execute(f'USE {getStock()}')
+        findmpn = f'SELECT * FROM {componentType} WHERE ManufacturerPartNumber = \'{mpn}\''
         cursor.execute(findmpn)
         components = cursor.fetchall()
         if components:
             found = True
-            Id = getId(cursor, table[0], mpn)
-            stockQuantity = getQuantityById(cursor, table[0], Id)
-            addById(cursor, table[0], Id, stockQuantity, qty)
+            print("given type, found")
+            Id = getId(cursor, componentType, mpn)
+            stockQuantity = getQuantityById(cursor, componentType, Id)
+            addById(cursor, componentType, Id, stockQuantity, qty)
             conn.commit()
-            newStockQuantity = getQuantityById(cursor, table[0], Id)
+            newStockQuantity = getQuantityById(cursor, componentType, Id)
             if newStockQuantity == stockQuantity + qty: 
                 return 'Stock updated successfully!'
             else:
                 return 'Something went wrong while updating the database!'
-    if not found:
-        r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
-        try:
-            if r_digi['ManufacturerPartNumber'] == mpn:
-                componentType = r_digi['Family']['Value']
-                if componentType in digiToDbTableNameReplace:
-                    for key in digiToDbTableNameReplace:
-                        if key == componentType:
-                            insertInto = f"INSERT INTO {digiToDbTableNameReplace[key]} (ManufacturerPartNumber, Quantity, StandardPackQty, LastUpdated) VALUES ('{mpn}', {qty}, {r_digi['StandardPackage']}, '{datetime.today().strftime('%d/%m/%Y')}')"
-                            cursor.execute(insertInto)
-                            conn.commit()
-                            Id = getId(cursor, digiToDbTableNameReplace[key], mpn)
-                            stockQuantity = getQuantityById(cursor, digiToDbTableNameReplace[key], Id)
-                            if stockQuantity == qty:
-                                return 'Stock updated successfully!'
-                            else:
-                                return 'Something went wrong while updating the database!'
+    else:
+        tables = getTables(cursor)
+        for table in tables:
+            findmpn = f'SELECT * FROM {table[0]} WHERE ManufacturerPartNumber = \'{mpn}\''
+            cursor.execute(findmpn)
+            components = cursor.fetchall()
+            if components:
+                found = True
+                print("type not given, found")
+                Id = getId(cursor, table[0], mpn)
+                stockQuantity = getQuantityById(cursor, table[0], Id)
+                addById(cursor, table[0], Id, stockQuantity, qty)
+                conn.commit()
+                newStockQuantity = getQuantityById(cursor, table[0], Id)
+                if newStockQuantity == stockQuantity + qty: 
+                    return 'Stock updated successfully!'
                 else:
-                    return 'App cannot understand the component type found, please select it manually'
-            else:
+                    return 'Something went wrong while updating the database!'
+    if not found:
+        if componentType == 'none':
+            print("type not given, not found")
+            r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
+            try:
+                if r_digi['ManufacturerPartNumber'] == mpn:
+                    componentType = r_digi['Family']['Value']
+                    if componentType in digiToDbTableNameReplace:
+                        for key in digiToDbTableNameReplace:
+                            if key == componentType:
+                                insertInto = f"INSERT INTO {digiToDbTableNameReplace[key]} (ManufacturerPartNumber, Quantity, LastUpdated) VALUES ('{mpn}', {qty}, '{datetime.today().strftime('%d/%m/%Y')}')"
+                                cursor.execute(insertInto)
+                                conn.commit()
+                                Id = getId(cursor, digiToDbTableNameReplace[key], mpn)
+                                stockQuantity = getQuantityById(cursor, digiToDbTableNameReplace[key], Id)
+                                if stockQuantity == qty:
+                                    return 'Stock updated successfully!'
+                                else:
+                                    return 'Something went wrong while updating the database!'
+                    else:
+                        return 'App cannot understand the component type found, please select it manually'
+                else:
+                    return 'Couldn\'t find the component type, please select it manually'
+            except:
                 return 'Couldn\'t find the component type, please select it manually'
-        except:
-            return 'Couldn\'t find the component type, please select it manually'
+        else:
+            print("given type, not found")
+            cursor.execute(f'USE {getStock()}')
+            insertInto = f"INSERT INTO {componentType} (ManufacturerPartNumber, Quantity, LastUpdated) VALUES ('{mpn}', {qty}, '{datetime.today().strftime('%d/%m/%Y')}')"
+            cursor.execute(insertInto)
+            conn.commit()
+            Id = getId(cursor, componentType, mpn)
+            stockQuantity = getQuantityById(cursor, componentType, Id)
+            if stockQuantity == qty:
+                return 'Stock updated successfully!'
+            else:
+                return 'Something went wrong while updating the database!'
 
 def withdrawById(cursor, table, Id, stockQuantity, qty):
     update = f'UPDATE {table} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
@@ -659,7 +696,7 @@ def updateBOM():
                 Lynxqtys.append(Lynxqty)
                 sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqty
                 def updateByDigiMous():
-                    r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = digi_headers).json()
+                    r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
                     mous_json['SearchByKeywordRequest']['keyword'] = mpn
                     r_mous = requests.post('https://api.mouser.com/api/v1/search/keyword?apiKey=0e7aaee3-b68a-4638-938b-c810074dc0d7', json = mous_json).json()
                     try:
