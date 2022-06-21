@@ -258,7 +258,18 @@ def add(mpn, qty):
                 else:
                     return 'Something went wrong while updating the database!'
     if not found:
-        if componentType == 'none':
+        if componentType != 'none':
+            cursor.execute(f'USE {getStock()}')
+            insertInto = f"INSERT INTO {componentType} (ManufacturerPartNumber, Quantity, LastUpdated) VALUES ('{mpn}', {qty}, '{datetime.today().strftime('%d/%m/%Y')}')"
+            cursor.execute(insertInto)
+            conn.commit()
+            Id = getId(cursor, componentType, mpn)
+            stockQuantity = getQuantityById(cursor, componentType, Id)
+            if stockQuantity == qty:
+                return 'Stock updated successfully!'
+            else:
+                return 'Something went wrong while updating the database!'
+        else:
             r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
             try:
                 if r_digi['ManufacturerPartNumber'] == mpn:
@@ -281,18 +292,7 @@ def add(mpn, qty):
                     return 'Couldn\'t find the component type, please select it manually'
             except:
                 return 'Couldn\'t find the component type, please select it manually'
-        else:
-            cursor.execute(f'USE {getStock()}')
-            insertInto = f"INSERT INTO {componentType} (ManufacturerPartNumber, Quantity, LastUpdated) VALUES ('{mpn}', {qty}, '{datetime.today().strftime('%d/%m/%Y')}')"
-            cursor.execute(insertInto)
-            conn.commit()
-            Id = getId(cursor, componentType, mpn)
-            stockQuantity = getQuantityById(cursor, componentType, Id)
-            if stockQuantity == qty:
-                return 'Stock updated successfully!'
-            else:
-                return 'Something went wrong while updating the database!'
-
+    
 def withdrawById(cursor, table, Id, stockQuantity, qty):
     update = f'UPDATE {table} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
     cursor.execute(update)
