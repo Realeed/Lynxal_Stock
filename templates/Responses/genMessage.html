@@ -23,7 +23,11 @@
         <p class="messageP">{{message}}</p>
         {% else %}
         {% for msg in messages %}
+        {% if notfoundMpns %}
         <p class="messageP" style="margin-top: 0px;"><span style="color: rgb(230, 0, 0); user-select: all;">{{notfoundMpns[loop.index - 1]}}</span>: {{msg}}</p>
+        {% elif notUpdatedMpns %}
+        <p class="messageP" style="margin-top: 0px;"><span style="color: rgb(230, 0, 0); user-select: all;">{{notUpdatedMpns[loop.index - 1]}}</span>: {{msg}}</p>
+        {% endif %}
         {% endfor %}
         <p class="messageP" style="margin-top: 0px;">All others are updated successfully!</p>
         {% endif %}

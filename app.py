@@ -237,7 +237,7 @@ def add(mpn, qty):
             else:
                 return 'Something went wrong while updating the database!'
     if not found:
-        r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn}', headers = digi_headers).json()
+        r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
         try:
             if r_digi['ManufacturerPartNumber'] == mpn:
                 componentType = r_digi['Family']['Value']
@@ -532,6 +532,36 @@ def addToStock():
     mpn = request.form['mpn']
     qty = int(request.form['quantity'])
     return redirect(url_for('genMessage', message = add(mpn, qty)))
+
+@app.route('/add_by_file', methods = ['POST'])
+def addByFile():
+    sheet = getExcelWbSheetsFilename()[1][0]
+    mpns = []
+    qtys = []
+    msgs = []
+    if getExcelColumn(sheet, "Comment"):
+        for row in range(2, sheet.max_row + 1):
+            if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
+                mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
+                qtys.append(sheet[row][getExcelColumn(sheet, 'Quantity')].value)
+
+    for i in range(len(mpns)):
+        msgs.append(add(mpns[i], qtys[i]))
+
+    notUpdatedMpns = []
+    messages = []
+    for i in range(len(msgs)):
+        if msgs[i] == 'Something went wrong while updating the database!':
+            notUpdatedMpns.append(mpns[i])
+            messages.append('couldn\'t update!')
+        elif msgs[i] == 'App cannot understand the component type found, please select it manually':
+            notUpdatedMpns.append(mpns[i])
+            messages.append('app cannot understand the component type found, please select it manually')
+        elif msgs[i] == 'Couldn\'t find the component type, please select it manually':
+            notUpdatedMpns.append(mpns[i])
+            messages.append('couldn\'t find the component type, please select it manually')
+
+    return render_template('Responses/genMessage.html', message = 'Stock updated successfully!',  messages = messages, notUpdatedMpns = notUpdatedMpns)
 
 @app.route('/withdraw_from_stock', methods = ['POST'])
 def withdrawFromStock():

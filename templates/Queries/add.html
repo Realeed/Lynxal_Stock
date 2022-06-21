@@ -29,6 +29,13 @@
                 <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Add">
                 <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
             </form>
+            <p class="infoMethodsP" style="margin-top: 100px; margin-left: -250px;">or upload an Excel file</p>
+            <form action="add_by_file" enctype="multipart/form-data" method="POST">
+                <label for="excel" style="margin-left: -5px;" id="excelLabel">Upload the file: </label>
+                <input type="file" style="width: 280px;" name="excel" id="excelInp">
+                <input type="submit" name="submit" id="submit" style="padding-left: 10px; padding-right: 10px; width: 100px;" value="Add">
+                <input type="hidden" name="stock" value="{{request.args.get('stock')}}">
+            </form>
         </div>
         {% endif %}
     </body>
