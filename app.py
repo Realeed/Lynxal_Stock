@@ -231,7 +231,6 @@ def add(mpn, qty):
         components = cursor.fetchall()
         if components:
             found = True
-            print("given type, found")
             Id = getId(cursor, componentType, mpn)
             stockQuantity = getQuantityById(cursor, componentType, Id)
             addById(cursor, componentType, Id, stockQuantity, qty)
@@ -249,7 +248,6 @@ def add(mpn, qty):
             components = cursor.fetchall()
             if components:
                 found = True
-                print("type not given, found")
                 Id = getId(cursor, table[0], mpn)
                 stockQuantity = getQuantityById(cursor, table[0], Id)
                 addById(cursor, table[0], Id, stockQuantity, qty)
@@ -261,7 +259,6 @@ def add(mpn, qty):
                     return 'Something went wrong while updating the database!'
     if not found:
         if componentType == 'none':
-            print("type not given, not found")
             r_digi = requests.get(f'https://api.digikey.com/Search/v3/Products/{mpn.replace("/", "%2F")}', headers = digi_headers).json()
             try:
                 if r_digi['ManufacturerPartNumber'] == mpn:
@@ -285,7 +282,6 @@ def add(mpn, qty):
             except:
                 return 'Couldn\'t find the component type, please select it manually'
         else:
-            print("given type, not found")
             cursor.execute(f'USE {getStock()}')
             insertInto = f"INSERT INTO {componentType} (ManufacturerPartNumber, Quantity, LastUpdated) VALUES ('{mpn}', {qty}, '{datetime.today().strftime('%d/%m/%Y')}')"
             cursor.execute(insertInto)
