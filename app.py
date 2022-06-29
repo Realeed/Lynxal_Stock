@@ -572,7 +572,7 @@ def addByFile():
     mpns = []
     qtys = []
     msgs = []
-    if getExcelColumn(sheet, "Part Number"):
+    if getExcelColumn(sheet, "Part Number") != None:
         for row in range(2, sheet.max_row + 1):
             if sheet[row][getExcelColumn(sheet, 'Part Number')].value != None:
                 mpns.append(sheet[row][getExcelColumn(sheet, 'Part Number')].value)
