@@ -294,7 +294,7 @@ def add(mpn, qty):
                 return 'Couldn\'t find the component type, please select it manually'
     
 def withdrawById(cursor, table, Id, stockQuantity, qty):
-    update = f'UPDATE {table} SET Quantity = ({stockQuantity} - {qty}) WHERE ID = {Id}'
+    update = f"UPDATE {table} SET Quantity = ({stockQuantity} - {qty}), LastUpdated = ('{datetime.today().strftime('%d/%m/%Y')}') WHERE ID = {Id}"
     cursor.execute(update)
 
 def withdraw(mpn, qty):
