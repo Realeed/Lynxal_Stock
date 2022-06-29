@@ -216,7 +216,7 @@ def getQuantityById(cursor, table, Id):
     return stockQuantities[0][0]
 
 def addById(cursor, table, Id, stockQuantity, qty):
-    update = f'UPDATE {table} SET Quantity = ({stockQuantity} + {qty}) WHERE ID = {Id}'
+    update = f"UPDATE {table} SET Quantity = ({stockQuantity} + {qty}), LastUpdated = ('{datetime.today().strftime('%d/%m/%Y')}') WHERE ID = {Id}"
     cursor.execute(update)
 
 def add(mpn, qty):
@@ -572,11 +572,11 @@ def addByFile():
     mpns = []
     qtys = []
     msgs = []
-    if getExcelColumn(sheet, "Comment"):
+    if getExcelColumn(sheet, "Part Number"):
         for row in range(2, sheet.max_row + 1):
-            if sheet[row][getExcelColumn(sheet, 'Comment')].value != None:
-                mpns.append(sheet[row][getExcelColumn(sheet, 'Comment')].value)
-                qtys.append(sheet[row][getExcelColumn(sheet, 'Quantity')].value)
+            if sheet[row][getExcelColumn(sheet, 'Part Number')].value != None:
+                mpns.append(sheet[row][getExcelColumn(sheet, 'Part Number')].value)
+                qtys.append(sheet[row][getExcelColumn(sheet, 'QTY')].value)
 
     for i in range(len(mpns)):
         msgs.append(add(mpns[i], qtys[i]))
