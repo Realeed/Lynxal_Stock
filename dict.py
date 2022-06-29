@@ -19,6 +19,7 @@ dbToUITableNameReplace = {
     'socs': 'SoCs',
     'spring_connectors': 'Spring Connectors',
     'tvs_diodes': 'TVS Diodes',
+    'usb_connectors': 'USB Connectors',
     'wire_to_board_connectors': 'Wire to Board Connectors',
     'zener_diodes': 'Zener Diodes',
 
