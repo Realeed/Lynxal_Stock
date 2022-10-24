@@ -45,7 +45,7 @@ digi_headers = {
     "Content-Type": "application/json",
     "User-Agent": "python-requests/2.4.3 CPython/3.4.0",
     "X-DIGIKEY-Client-Id": "mEszZA7lW3tiCtvB8UAS4SlC8eDoGWPv",
-    "Authorization": f"Bearer {getBearerToken()}",
+    #"Authorization": f"Bearer {getBearerToken()}",
 }
 
 mous_json = {
@@ -646,29 +646,29 @@ def updateBOM():
     Mousqtys = []
 
     for sheet in sheets:
-        if not getExcelColumn(sheet, 'Digikey Stock'):
+        if not getExcelColumn(sheet, 'Lynxal Stock'):
             sheet.cell(1, sheet.max_column + 1).value = 'Lynxal Stock'
-            sheet.cell(1, sheet.max_column + 1).value = 'Digikey Stock'
-            sheet.cell(1, sheet.max_column + 1).value = 'Mouser Stock'
-            sheet[1][sheet.max_column - 3]._style = copy(sheet[1][sheet.max_column - 4]._style)
-            sheet[1][sheet.max_column - 2]._style = copy(sheet[1][sheet.max_column - 4]._style)
-            sheet[1][sheet.max_column - 1]._style = copy(sheet[1][sheet.max_column - 4]._style)
-            sheet.column_dimensions[sheet[1][sheet.max_column - 3].coordinate[0]].bestFit = True
-            sheet.column_dimensions[sheet[1][sheet.max_column - 2].coordinate[0]].bestFit = True
-            sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
+            # sheet.cell(1, sheet.max_column + 1).value = 'Digikey Stock'
+            # sheet.cell(1, sheet.max_column + 1).value = 'Mouser Stock'
+            # sheet[1][sheet.max_column - 3]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            # sheet[1][sheet.max_column - 2]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            # sheet[1][sheet.max_column - 1]._style = copy(sheet[1][sheet.max_column - 4]._style)
+            # sheet.column_dimensions[sheet[1][sheet.max_column - 3].coordinate[0]].bestFit = True
+            # sheet.column_dimensions[sheet[1][sheet.max_column - 2].coordinate[0]].bestFit = True
+            # sheet.column_dimensions[sheet[1][sheet.max_column - 1].coordinate[0]].bestFit = True
 
         for row in range (2, sheet.max_row + 1):
             sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].font = font
             sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].alignment = alignment
             sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].number_format = number_format
 
-            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].font = font
-            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].alignment = alignment
-            sheet[row][getExcelColumn(sheet, 'Digikey Stock')].number_format = number_format
+            # sheet[row][getExcelColumn(sheet, 'Digikey Stock')].font = font
+            # sheet[row][getExcelColumn(sheet, 'Digikey Stock')].alignment = alignment
+            # sheet[row][getExcelColumn(sheet, 'Digikey Stock')].number_format = number_format
 
-            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].font = font
-            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].alignment = alignment
-            sheet[row][getExcelColumn(sheet, 'Mouser Stock')].number_format = number_format
+            # sheet[row][getExcelColumn(sheet, 'Mouser Stock')].font = font
+            # sheet[row][getExcelColumn(sheet, 'Mouser Stock')].alignment = alignment
+            # sheet[row][getExcelColumn(sheet, 'Mouser Stock')].number_format = number_format
 
             if not sheet[row][getExcelColumn(sheet, 'Comment')].value:
                 continue
@@ -682,11 +682,13 @@ def updateBOM():
                     sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqtys[index]
                 else:
                     sheet[row][getExcelColumn(sheet, 'Lynxal Stock')].value = Lynxqtys[index]
-                    sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = Digiqtys[index]
-                    sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = Mousqtys[index]
+                    # sheet[row][getExcelColumn(sheet, 'Digikey Stock')].value = Digiqtys[index]
+                    # sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = Mousqtys[index]
             else:
                 mpns.append(mpn)
                 Lynxqty = getQuantity(mpn)
+                print(mpn, ": ")
+                print(Lynxqty)
                 if not Lynxqty:
                     Lynxqty = 0
                 Lynxqtys.append(Lynxqty)
@@ -724,14 +726,14 @@ def updateBOM():
                     except:
                         Mousqtys.append(0)
                         sheet[row][getExcelColumn(sheet, 'Mouser Stock')].value = 0
-                if requiredQty:
-                    if Lynxqty < 1.1 * requiredQty:
-                        updateByDigiMous()
-                    else:
-                        Digiqtys.append('')
-                        Mousqtys.append('')
-                else:
-                    updateByDigiMous()
+                # if requiredQty:
+                #     if Lynxqty < 1.1 * requiredQty:
+                #         updateByDigiMous()
+                #     else:
+                #         Digiqtys.append('')
+                #         Mousqtys.append('')
+                # else:
+                #     updateByDigiMous()
 
     path = '(Updated) ' + filename
     wb.save(path)
